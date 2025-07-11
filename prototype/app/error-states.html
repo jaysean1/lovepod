@@ -1,0 +1,757 @@
+<!-- location: /Users/qiansui/Desktop/Projects/lovepod/prototype/app/error-states.html -->
+<!-- iPod风格错误状态界面 -->
+<!-- 展示各种错误情况的用户友好处理方式 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPod Error States - 错误状态</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .error-container {
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .error-header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .error-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .error-subtitle {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .error-states {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+        
+        .error-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .error-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .error-card-header {
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .error-card-header.network {
+            background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
+        }
+        
+        .error-card-header.permission {
+            background: linear-gradient(135deg, #FF3B30 0%, #D70015 100%);
+        }
+        
+        .error-card-header.content {
+            background: linear-gradient(135deg, #8E8E93 0%, #636366 100%);
+        }
+        
+        .error-card-header.service {
+            background: linear-gradient(135deg, #AF52DE 0%, #A44BF7 100%);
+        }
+        
+        .error-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .error-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+        }
+        
+        .error-card-desc {
+            font-size: 14px;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .error-card-body {
+            padding: 20px;
+        }
+        
+        .error-message {
+            background: rgba(255,59,48,0.1);
+            color: #FF3B30;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            border-left: 3px solid #FF3B30;
+        }
+        
+        .error-solutions {
+            margin-bottom: 20px;
+        }
+        
+        .solutions-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .solution-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .solution-item::before {
+            content: '•';
+            color: #007AFF;
+            margin-right: 8px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .error-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #007AFF 0%, #0056d6 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #FF3B30 0%, #D70015 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255,59,48,0.3);
+        }
+        
+        .ipod-demo {
+            background: #1a1a1a;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px;
+            margin: 20px;
+        }
+        
+        .ipod-screen {
+            width: 240px;
+            height: 160px;
+            background: linear-gradient(145deg, #333 0%, #555 100%);
+            border-radius: 10px;
+            margin: 0 auto 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ipod-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: screenGlare 3s infinite;
+        }
+        
+        @keyframes screenGlare {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .error-icon-large {
+            font-size: 32px;
+            color: #FF3B30;
+            margin-bottom: 10px;
+        }
+        
+        .error-text {
+            font-size: 14px;
+            color: #ccc;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        .recovery-mode {
+            background: rgba(0,122,255,0.1);
+            border: 1px solid rgba(0,122,255,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .recovery-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #007AFF;
+            margin-bottom: 8px;
+        }
+        
+        .recovery-desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        
+        .status-error {
+            background: rgba(255,59,48,0.1);
+            color: #FF3B30;
+        }
+        
+        .status-warning {
+            background: rgba(255,149,0,0.1);
+            color: #FF9500;
+        }
+        
+        .status-info {
+            background: rgba(0,122,255,0.1);
+            color: #007AFF;
+        }
+        
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        
+        .loading-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #007AFF;
+            animation: loadingDot 1.5s infinite ease-in-out;
+        }
+        
+        .loading-dot:nth-child(1) { animation-delay: 0s; }
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes loadingDot {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="error-container">
+        <!-- 错误状态头部 -->
+        <div class="error-header">
+            <div class="error-title">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                错误状态处理
+            </div>
+            <div class="error-subtitle">
+                友好的错误处理让用户保持良好的使用体验
+            </div>
+        </div>
+        
+        <!-- iPod错误演示 -->
+        <div class="ipod-demo">
+            <div class="ipod-screen" id="errorScreen">
+                <div class="error-icon-large">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="error-text">
+                    无法连接到Apple Music<br>
+                    请检查网络连接
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="simulateError('network')">网络错误</button>
+                <button class="btn btn-secondary" onclick="simulateError('permission')">权限错误</button>
+                <button class="btn btn-secondary" onclick="simulateError('content')">内容错误</button>
+                <button class="btn btn-secondary" onclick="simulateError('service')">服务错误</button>
+            </div>
+        </div>
+        
+        <!-- 错误状态卡片 -->
+        <div class="error-states">
+            <!-- 网络连接错误 -->
+            <div class="error-card">
+                <div class="error-card-header network">
+                    <div class="error-icon">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                    <div class="error-card-title">网络连接问题</div>
+                    <div class="error-card-desc">无法连接到Apple Music服务</div>
+                </div>
+                <div class="error-card-body">
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        网络连接超时，请检查您的网络设置
+                    </div>
+                    <div class="error-solutions">
+                        <div class="solutions-title">解决方案：</div>
+                        <div class="solution-item">检查WiFi或移动数据连接</div>
+                        <div class="solution-item">尝试刷新网络连接</div>
+                        <div class="solution-item">使用离线模式播放已下载内容</div>
+                    </div>
+                    <div class="error-actions">
+                        <button class="btn btn-primary" onclick="retryConnection()">
+                            <i class="fas fa-sync"></i>
+                            重试连接
+                        </button>
+                        <button class="btn btn-secondary" onclick="goOffline()">
+                            <i class="fas fa-download"></i>
+                            离线模式
+                        </button>
+                    </div>
+                    <div class="status-indicator status-error">
+                        <i class="fas fa-times-circle"></i>
+                        网络不可用
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 权限拒绝错误 -->
+            <div class="error-card">
+                <div class="error-card-header permission">
+                    <div class="error-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="error-card-title">权限访问被拒绝</div>
+                    <div class="error-card-desc">无法访问您的音乐库</div>
+                </div>
+                <div class="error-card-body">
+                    <div class="error-message">
+                        <i class="fas fa-lock mr-2"></i>
+                        音乐库访问权限被拒绝，部分功能可能受限
+                    </div>
+                    <div class="error-solutions">
+                        <div class="solutions-title">解决方案：</div>
+                        <div class="solution-item">前往系统设置开启音乐库权限</div>
+                        <div class="solution-item">重新启动应用以刷新权限状态</div>
+                        <div class="solution-item">联系客服获取帮助</div>
+                    </div>
+                    <div class="error-actions">
+                        <button class="btn btn-primary" onclick="openSettings()">
+                            <i class="fas fa-cog"></i>
+                            前往设置
+                        </button>
+                        <button class="btn btn-secondary" onclick="retryPermission()">
+                            <i class="fas fa-redo"></i>
+                            重新请求
+                        </button>
+                    </div>
+                    <div class="status-indicator status-error">
+                        <i class="fas fa-ban"></i>
+                        权限被拒绝
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 内容加载失败 -->
+            <div class="error-card">
+                <div class="error-card-header content">
+                    <div class="error-icon">
+                        <i class="fas fa-file-audio"></i>
+                    </div>
+                    <div class="error-card-title">内容加载失败</div>
+                    <div class="error-card-desc">无法加载音乐内容</div>
+                </div>
+                <div class="error-card-body">
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        音乐文件损坏或不可用
+                    </div>
+                    <div class="error-solutions">
+                        <div class="solutions-title">解决方案：</div>
+                        <div class="solution-item">尝试播放其他音乐</div>
+                        <div class="solution-item">重新下载该音乐</div>
+                        <div class="solution-item">检查Apple Music订阅状态</div>
+                    </div>
+                    <div class="error-actions">
+                        <button class="btn btn-primary" onclick="skipTrack()">
+                            <i class="fas fa-step-forward"></i>
+                            跳过此曲
+                        </button>
+                        <button class="btn btn-secondary" onclick="redownload()">
+                            <i class="fas fa-download"></i>
+                            重新下载
+                        </button>
+                    </div>
+                    <div class="status-indicator status-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        内容不可用
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Apple Music服务错误 -->
+            <div class="error-card">
+                <div class="error-card-header service">
+                    <div class="error-icon">
+                        <i class="fab fa-apple"></i>
+                    </div>
+                    <div class="error-card-title">Apple Music服务异常</div>
+                    <div class="error-card-desc">服务暂时不可用</div>
+                </div>
+                <div class="error-card-body">
+                    <div class="error-message">
+                        <i class="fas fa-server mr-2"></i>
+                        Apple Music服务正在维护中
+                    </div>
+                    <div class="error-solutions">
+                        <div class="solutions-title">解决方案：</div>
+                        <div class="solution-item">等待服务恢复正常</div>
+                        <div class="solution-item">播放本地已下载的音乐</div>
+                        <div class="solution-item">稍后再试</div>
+                    </div>
+                    <div class="error-actions">
+                        <button class="btn btn-primary" onclick="checkService()">
+                            <i class="fas fa-search"></i>
+                            检查服务状态
+                        </button>
+                        <button class="btn btn-secondary" onclick="playLocal()">
+                            <i class="fas fa-music"></i>
+                            播放本地音乐
+                        </button>
+                    </div>
+                    <div class="status-indicator status-info">
+                        <i class="fas fa-info-circle"></i>
+                        服务维护中
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 恢复模式 -->
+        <div class="recovery-mode">
+            <div class="recovery-title">
+                <i class="fas fa-tools mr-2"></i>
+                智能恢复模式
+            </div>
+            <div class="recovery-desc">
+                当检测到错误时，应用会自动尝试恢复服务。包括重新连接网络、重新请求权限、切换到离线模式等。
+                用户可以随时手动触发恢复操作，或者等待自动恢复完成。
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 错误演示数据
+        const errorStates = {
+            network: {
+                icon: 'fas fa-wifi',
+                title: '网络连接失败',
+                message: '无法连接到Apple Music\n请检查网络连接'
+            },
+            permission: {
+                icon: 'fas fa-shield-alt',
+                title: '权限访问被拒绝',
+                message: '无法访问音乐库\n请前往设置开启权限'
+            },
+            content: {
+                icon: 'fas fa-file-audio',
+                title: '内容加载失败',
+                message: '音乐文件不可用\n正在尝试重新加载'
+            },
+            service: {
+                icon: 'fab fa-apple',
+                title: 'Apple Music服务异常',
+                message: '服务暂时不可用\n请稍后再试'
+            }
+        };
+        
+        // 模拟错误状态
+        function simulateError(type) {
+            const errorScreen = document.getElementById('errorScreen');
+            const errorData = errorStates[type];
+            
+            if (errorData) {
+                errorScreen.innerHTML = `
+                    <div class="error-icon-large">
+                        <i class="${errorData.icon}"></i>
+                    </div>
+                    <div class="error-text">
+                        ${errorData.message}
+                    </div>
+                `;
+                
+                showMessage(errorData.title, 'error');
+            }
+        }
+        
+        // 重试连接
+        function retryConnection() {
+            showMessage('正在重试连接...', 'info');
+            
+            // 模拟连接过程
+            setTimeout(() => {
+                const success = Math.random() > 0.4; // 60% 成功率
+                
+                if (success) {
+                    showMessage('连接成功！', 'success');
+                    updateErrorScreen('success', '连接已恢复\n可以正常使用了');
+                } else {
+                    showMessage('连接失败，请稍后重试', 'error');
+                }
+            }, 2000);
+        }
+        
+        // 离线模式
+        function goOffline() {
+            showMessage('正在切换到离线模式...', 'info');
+            
+            setTimeout(() => {
+                showMessage('已切换到离线模式', 'success');
+                updateErrorScreen('offline', '离线模式\n可以播放已下载的音乐');
+            }, 1000);
+        }
+        
+        // 打开设置
+        function openSettings() {
+            showMessage('正在打开系统设置...', 'info');
+            
+            setTimeout(() => {
+                showMessage('请在设置中开启音乐库权限', 'info');
+            }, 1000);
+        }
+        
+        // 重新请求权限
+        function retryPermission() {
+            showMessage('正在重新请求权限...', 'info');
+            
+            setTimeout(() => {
+                const granted = Math.random() > 0.5; // 50% 成功率
+                
+                if (granted) {
+                    showMessage('权限授予成功！', 'success');
+                    updateErrorScreen('success', '权限已授予\n可以正常访问音乐库');
+                } else {
+                    showMessage('权限仍被拒绝', 'error');
+                }
+            }, 1500);
+        }
+        
+        // 跳过曲目
+        function skipTrack() {
+            showMessage('正在跳过当前曲目...', 'info');
+            
+            setTimeout(() => {
+                showMessage('已跳过到下一首', 'success');
+                updateErrorScreen('success', '播放下一首\n一切正常');
+            }, 1000);
+        }
+        
+        // 重新下载
+        function redownload() {
+            showMessage('正在重新下载...', 'info');
+            
+            setTimeout(() => {
+                showMessage('下载完成', 'success');
+                updateErrorScreen('success', '下载完成\n可以正常播放');
+            }, 3000);
+        }
+        
+        // 检查服务状态
+        function checkService() {
+            showMessage('正在检查服务状态...', 'info');
+            
+            setTimeout(() => {
+                const available = Math.random() > 0.3; // 70% 可用
+                
+                if (available) {
+                    showMessage('服务已恢复正常', 'success');
+                    updateErrorScreen('success', '服务已恢复\nApple Music正常运行');
+                } else {
+                    showMessage('服务仍在维护中', 'warning');
+                }
+            }, 2000);
+        }
+        
+        // 播放本地音乐
+        function playLocal() {
+            showMessage('正在加载本地音乐...', 'info');
+            
+            setTimeout(() => {
+                showMessage('已切换到本地音乐', 'success');
+                updateErrorScreen('success', '本地音乐模式\n播放已下载的歌曲');
+            }, 1000);
+        }
+        
+        // 更新错误屏幕
+        function updateErrorScreen(type, message) {
+            const errorScreen = document.getElementById('errorScreen');
+            
+            let icon, color;
+            switch (type) {
+                case 'success':
+                    icon = 'fas fa-check-circle';
+                    color = '#34C759';
+                    break;
+                case 'offline':
+                    icon = 'fas fa-download';
+                    color = '#FF9500';
+                    break;
+                default:
+                    icon = 'fas fa-exclamation-triangle';
+                    color = '#FF3B30';
+            }
+            
+            errorScreen.innerHTML = `
+                <div class="error-icon-large" style="color: ${color}">
+                    <i class="${icon}"></i>
+                </div>
+                <div class="error-text">
+                    ${message}
+                </div>
+            `;
+        }
+        
+        // 显示消息
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${getMessageClass(type)}`;
+            messageDiv.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="${getMessageIcon(type)}"></i>
+                    <span>${message}</span>
+                    ${type === 'info' ? '<div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>' : ''}
+                </div>
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            // 自动移除消息
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+        
+        // 获取消息样式类
+        function getMessageClass(type) {
+            switch (type) {
+                case 'success':
+                    return 'bg-green-500 text-white';
+                case 'error':
+                    return 'bg-red-500 text-white';
+                case 'warning':
+                    return 'bg-yellow-500 text-white';
+                case 'info':
+                default:
+                    return 'bg-blue-500 text-white';
+            }
+        }
+        
+        // 获取消息图标
+        function getMessageIcon(type) {
+            switch (type) {
+                case 'success':
+                    return 'fas fa-check-circle';
+                case 'error':
+                    return 'fas fa-exclamation-triangle';
+                case 'warning':
+                    return 'fas fa-exclamation-circle';
+                case 'info':
+                default:
+                    return 'fas fa-info-circle';
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 模拟初始错误状态
+            simulateError('network');
+        });
+    </script>
+</body>
+</html>

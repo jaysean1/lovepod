@@ -1,0 +1,589 @@
+<!-- location: /Users/qiansui/Desktop/Projects/lovepod/prototype/app/wheel-control.html -->
+<!-- iPod风格转盘控制组件 -->
+<!-- 专注展示转盘的详细交互设计和手势识别 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPod Wheel Control - 转盘控制组件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .demo-container {
+            max-width: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .wheel-demo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        
+        .wheel-control {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #e0e0e0 0%, #f5f5f5 100%);
+            box-shadow: 
+                inset 0 -15px 25px rgba(0,0,0,0.1),
+                inset 0 15px 25px rgba(255,255,255,0.9),
+                0 8px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            user-select: none;
+            transform: rotate(0deg);
+        }
+        
+        .wheel-control:active {
+            transform: scale(0.98);
+            box-shadow: 
+                inset 0 -12px 20px rgba(0,0,0,0.15),
+                inset 0 12px 20px rgba(255,255,255,0.8),
+                0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 77px;
+            height: 77px;
+            background: linear-gradient(145deg, #f0f0f0 0%, #d5d5d5 100%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 3px 15px rgba(0,0,0,0.2),
+                inset 0 1px 3px rgba(255,255,255,0.8);
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        
+        .wheel-center:active {
+            transform: translate(-50%, -50%) scale(0.95);
+            box-shadow: 
+                inset 0 3px 15px rgba(0,0,0,0.25),
+                inset 0 -1px 3px rgba(255,255,255,0.6);
+        }
+        
+        .wheel-button {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 16px;
+            border-radius: 50%;
+        }
+        
+        .wheel-button:hover {
+            color: #007AFF;
+            background: rgba(0,122,255,0.1);
+            transform: scale(1.1);
+        }
+        
+        .wheel-button:active {
+            transform: scale(0.95);
+            background: rgba(0,122,255,0.2);
+        }
+        
+        .wheel-button.up { 
+            top: 25px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+        }
+        .wheel-button.down { 
+            bottom: 25px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+        }
+        .wheel-button.left { 
+            left: 25px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+        }
+        .wheel-button.right { 
+            right: 25px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+        }
+        
+        .gesture-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            border: 3px dashed rgba(0,122,255,0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .gesture-indicator.active {
+            opacity: 1;
+            animation: rotateIndicator 2s linear infinite;
+        }
+        
+        @keyframes rotateIndicator {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        .feedback-display {
+            background: #1a1a1a;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .feedback-text {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .feedback-subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        
+        .gesture-guide {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .gesture-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .gesture-item h4 {
+            color: #007AFF;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .gesture-item p {
+            font-size: 12px;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        
+        .rotation-visual {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0,122,255,0.3);
+            border-top: 3px solid #007AFF;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .rotation-visual.active {
+            opacity: 1;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .button-labels {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        
+        .button-label {
+            position: absolute;
+            background: rgba(0,122,255,0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .button-label.show {
+            opacity: 1;
+        }
+        
+        .button-label.up { top: 5px; left: 50%; transform: translateX(-50%); }
+        .button-label.down { bottom: 5px; left: 50%; transform: translateX(-50%); }
+        .button-label.left { left: 5px; top: 50%; transform: translateY(-50%); }
+        .button-label.right { right: 5px; top: 50%; transform: translateY(-50%); }
+        .button-label.center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="demo-container">
+        <!-- 转盘演示区 -->
+        <div class="wheel-demo">
+            <div class="relative">
+                <div class="wheel-control" id="wheelControl">
+                    <!-- 手势指示器 -->
+                    <div class="gesture-indicator" id="gestureIndicator"></div>
+                    
+                    <!-- 旋转视觉反馈 -->
+                    <div class="rotation-visual" id="rotationVisual"></div>
+                    
+                    <!-- 方向按钮 -->
+                    <button class="wheel-button up" id="btnUp" data-action="menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <button class="wheel-button down" id="btnDown" data-action="play">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button class="wheel-button left" id="btnLeft" data-action="prev">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button class="wheel-button right" id="btnRight" data-action="next">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                    
+                    <!-- 中央按钮 -->
+                    <div class="wheel-center" id="centerButton">
+                        <i class="fas fa-dot-circle text-xl text-gray-600"></i>
+                    </div>
+                    
+                    <!-- 按钮标签 -->
+                    <div class="button-labels">
+                        <div class="button-label up" id="labelUp">菜单</div>
+                        <div class="button-label down" id="labelDown">播放/暂停</div>
+                        <div class="button-label left" id="labelLeft">上一首</div>
+                        <div class="button-label right" id="labelRight">下一首</div>
+                        <div class="button-label center" id="labelCenter">确认/选择</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 反馈显示区 -->
+        <div class="feedback-display">
+            <div class="feedback-text" id="feedbackText">
+                <i class="fas fa-hand-pointer mr-2"></i>
+                触摸转盘体验经典iPod操作
+            </div>
+            <div class="feedback-subtitle">
+                支持旋转手势、按钮点击和长按操作
+            </div>
+            
+            <!-- 手势指南 -->
+            <div class="gesture-guide">
+                <div class="gesture-item">
+                    <h4><i class="fas fa-redo mr-2"></i>慢速旋转</h4>
+                    <p>顺时针/逆时针旋转调节音量<br>每30度调节1级音量</p>
+                </div>
+                <div class="gesture-item">
+                    <h4><i class="fas fa-fast-forward mr-2"></i>快速旋转</h4>
+                    <p>连续旋转90度以上切换歌曲<br>顺时针下一首，逆时针上一首</p>
+                </div>
+                <div class="gesture-item">
+                    <h4><i class="fas fa-clock mr-2"></i>长按旋转</h4>
+                    <p>长按同时旋转调节播放进度<br>精确控制播放位置</p>
+                </div>
+                <div class="gesture-item">
+                    <h4><i class="fas fa-mouse-pointer mr-2"></i>中央按钮</h4>
+                    <p>单击播放/暂停<br>长按呼出菜单</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 控制状态
+        let isPlaying = false;
+        let currentVolume = 50;
+        let isRotating = false;
+        let startAngle = 0;
+        let totalRotation = 0;
+        let rotationSpeed = 0;
+        let lastRotationTime = 0;
+        let isLongPress = false;
+        let longPressTimer = null;
+        
+        // DOM元素
+        const wheelControl = document.getElementById('wheelControl');
+        const centerButton = document.getElementById('centerButton');
+        const feedbackText = document.getElementById('feedbackText');
+        const gestureIndicator = document.getElementById('gestureIndicator');
+        const rotationVisual = document.getElementById('rotationVisual');
+        
+        // 按钮元素
+        const buttons = {
+            up: document.getElementById('btnUp'),
+            down: document.getElementById('btnDown'),
+            left: document.getElementById('btnLeft'),
+            right: document.getElementById('btnRight')
+        };
+        
+        // 标签元素
+        const labels = {
+            up: document.getElementById('labelUp'),
+            down: document.getElementById('labelDown'),
+            left: document.getElementById('labelLeft'),
+            right: document.getElementById('labelRight'),
+            center: document.getElementById('labelCenter')
+        };
+        
+        // 获取相对中心点的角度
+        function getAngle(e, element) {
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            return Math.atan2(e.clientY - centerY, e.clientX - centerX);
+        }
+        
+        // 角度差异计算
+        function angleDifference(a, b) {
+            let diff = a - b;
+            while (diff > Math.PI) diff -= 2 * Math.PI;
+            while (diff < -Math.PI) diff += 2 * Math.PI;
+            return diff;
+        }
+        
+        // 更新反馈文本
+        function updateFeedback(text, icon = 'fas fa-hand-pointer') {
+            feedbackText.innerHTML = `<i class="${icon} mr-2"></i>${text}`;
+        }
+        
+        // 显示按钮标签
+        function showButtonLabel(button, show = true) {
+            if (labels[button]) {
+                labels[button].classList.toggle('show', show);
+            }
+        }
+        
+        // 转盘旋转开始
+        wheelControl.addEventListener('mousedown', (e) => {
+            if (e.target === centerButton || e.target.closest('.wheel-center')) return;
+            
+            isRotating = true;
+            startAngle = getAngle(e, wheelControl);
+            totalRotation = 0;
+            rotationSpeed = 0;
+            lastRotationTime = Date.now();
+            
+            gestureIndicator.classList.add('active');
+            rotationVisual.classList.add('active');
+            
+            // 长按检测
+            longPressTimer = setTimeout(() => {
+                isLongPress = true;
+                updateFeedback('长按旋转 - 调节播放进度', 'fas fa-clock');
+            }, 500);
+        });
+        
+        // 转盘旋转过程
+        document.addEventListener('mousemove', (e) => {
+            if (!isRotating) return;
+            
+            const currentAngle = getAngle(e, wheelControl);
+            const deltaAngle = angleDifference(currentAngle, startAngle);
+            const currentTime = Date.now();
+            
+            totalRotation += deltaAngle;
+            rotationSpeed = Math.abs(deltaAngle) / (currentTime - lastRotationTime) * 1000;
+            
+            startAngle = currentAngle;
+            lastRotationTime = currentTime;
+            
+            // 视觉反馈
+            wheelControl.style.transform = `rotate(${totalRotation}rad)`;
+            
+            // 手势识别
+            if (isLongPress) {
+                // 长按旋转 - 进度控制
+                const progress = Math.max(0, Math.min(100, 50 + (totalRotation * 50)));
+                updateFeedback(`播放进度: ${progress.toFixed(0)}%`, 'fas fa-clock');
+            } else if (rotationSpeed > 5) {
+                // 快速旋转 - 切换歌曲
+                if (deltaAngle > 0) {
+                    updateFeedback('下一首 →', 'fas fa-step-forward');
+                } else {
+                    updateFeedback('← 上一首', 'fas fa-step-backward');
+                }
+            } else {
+                // 慢速旋转 - 音量调节
+                const volumeChange = Math.round(totalRotation * 10);
+                currentVolume = Math.max(0, Math.min(100, 50 + volumeChange));
+                updateFeedback(`音量: ${currentVolume}%`, 'fas fa-volume-up');
+            }
+        });
+        
+        // 转盘旋转结束
+        document.addEventListener('mouseup', () => {
+            if (!isRotating) return;
+            
+            isRotating = false;
+            isLongPress = false;
+            
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            
+            gestureIndicator.classList.remove('active');
+            rotationVisual.classList.remove('active');
+            
+            // 重置转盘旋转
+            setTimeout(() => {
+                wheelControl.style.transform = 'rotate(0deg)';
+            }, 300);
+            
+            // 根据旋转量执行操作
+            if (Math.abs(totalRotation) > 1.5) {
+                if (totalRotation > 0) {
+                    updateFeedback('切换到下一首', 'fas fa-step-forward');
+                } else {
+                    updateFeedback('切换到上一首', 'fas fa-step-backward');
+                }
+            } else {
+                updateFeedback('触摸转盘体验经典iPod操作', 'fas fa-hand-pointer');
+            }
+        });
+        
+        // 中央按钮事件
+        centerButton.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            const playIcon = buttons.down.querySelector('i');
+            
+            if (isPlaying) {
+                playIcon.className = 'fas fa-pause';
+                updateFeedback('播放中...', 'fas fa-play');
+            } else {
+                playIcon.className = 'fas fa-play';
+                updateFeedback('已暂停', 'fas fa-pause');
+            }
+        });
+        
+        // 中央按钮长按
+        let centerLongPress = false;
+        centerButton.addEventListener('mousedown', () => {
+            centerLongPress = setTimeout(() => {
+                updateFeedback('菜单模式 - 旋转选择选项', 'fas fa-bars');
+                centerLongPress = false;
+            }, 800);
+        });
+        
+        centerButton.addEventListener('mouseup', () => {
+            if (centerLongPress) {
+                clearTimeout(centerLongPress);
+                centerLongPress = false;
+            }
+        });
+        
+        // 方向按钮事件
+        Object.keys(buttons).forEach(key => {
+            const button = buttons[key];
+            
+            button.addEventListener('mouseenter', () => {
+                showButtonLabel(key, true);
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                showButtonLabel(key, false);
+            });
+            
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                const actions = {
+                    up: () => updateFeedback('菜单 - 长按中央按钮访问', 'fas fa-bars'),
+                    down: () => {
+                        isPlaying = !isPlaying;
+                        const icon = button.querySelector('i');
+                        if (isPlaying) {
+                            icon.className = 'fas fa-pause';
+                            updateFeedback('播放中...', 'fas fa-play');
+                        } else {
+                            icon.className = 'fas fa-play';
+                            updateFeedback('已暂停', 'fas fa-pause');
+                        }
+                    },
+                    left: () => updateFeedback('上一首', 'fas fa-step-backward'),
+                    right: () => updateFeedback('下一首', 'fas fa-step-forward')
+                };
+                
+                actions[key]();
+            });
+        });
+        
+        // 防止右键菜单
+        wheelControl.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+        
+        // 触摸设备支持
+        wheelControl.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            wheelControl.dispatchEvent(mouseEvent);
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (!isRotating) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            document.dispatchEvent(mouseEvent);
+        });
+        
+        document.addEventListener('touchend', () => {
+            if (!isRotating) return;
+            const mouseEvent = new MouseEvent('mouseup');
+            document.dispatchEvent(mouseEvent);
+        });
+    </script>
+</body>
+</html>

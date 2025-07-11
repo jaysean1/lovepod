@@ -1,0 +1,877 @@
+<!-- location: /Users/qiansui/Desktop/Projects/lovepod/prototype/app/music-library.html -->
+<!-- iPod风格音乐库浏览界面 -->
+<!-- 展示音乐库的分类浏览和Apple Music集成 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPod Music Library - 音乐库浏览</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .library-container {
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .library-header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .library-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .library-subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        
+        .search-bar {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 14px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        
+        .search-bar::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .library-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+        
+        .category-list {
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            padding: 20px;
+        }
+        
+        .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .category-item {
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .category-item:hover {
+            background: rgba(0,122,255,0.1);
+        }
+        
+        .category-item.active {
+            background: linear-gradient(135deg, #007AFF 0%, #0056d6 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,122,255,0.3);
+        }
+        
+        .category-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .category-icon {
+            width: 20px;
+            margin-right: 12px;
+            text-align: center;
+        }
+        
+        .category-text {
+            flex: 1;
+        }
+        
+        .category-count {
+            font-size: 12px;
+            color: #666;
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            min-width: 24px;
+            text-align: center;
+        }
+        
+        .category-item.active .category-count {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .content-area {
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .content-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .view-toggle {
+            display: flex;
+            background: #f0f0f0;
+            border-radius: 8px;
+            padding: 2px;
+        }
+        
+        .view-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .view-btn.active {
+            background: white;
+            color: #007AFF;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .music-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .music-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .music-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .music-card-cover {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            margin: 0 auto 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .music-card-cover i {
+            font-size: 24px;
+            color: white;
+            opacity: 0.7;
+        }
+        
+        .music-card-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        
+        .music-card-subtitle {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.2;
+        }
+        
+        .music-list {
+            display: none;
+        }
+        
+        .music-list.active {
+            display: block;
+        }
+        
+        .music-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 4px;
+        }
+        
+        .music-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .music-item-cover {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            margin-right: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .music-item-cover i {
+            font-size: 16px;
+            color: white;
+            opacity: 0.8;
+        }
+        
+        .music-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .music-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .music-item-subtitle {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .music-item-action {
+            padding: 8px;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .music-item-action:hover {
+            color: #007AFF;
+        }
+        
+        .loading-placeholder {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007AFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .apple-music-badge {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #FC3C44 0%, #FF4E50 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+        
+        .apple-music-badge i {
+            margin-right: 4px;
+        }
+        
+        .stats-bar {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-item {
+            text-align: center;
+        }
+        
+        .stats-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stats-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="library-container">
+        <!-- 库头部 -->
+        <div class="library-header">
+            <div class="library-title">
+                <i class="fas fa-music mr-2"></i>
+                音乐库
+                <div class="apple-music-badge">
+                    <i class="fab fa-apple"></i>
+                    Apple Music
+                </div>
+            </div>
+            <div class="library-subtitle">
+                探索你的音乐收藏和Apple Music内容
+            </div>
+            <input type="text" class="search-bar" placeholder="搜索歌曲、艺术家或专辑...">
+        </div>
+        
+        <!-- 库内容 -->
+        <div class="library-content">
+            <!-- 分类列表 -->
+            <div class="category-list">
+                <h3 class="category-title">浏览分类</h3>
+                
+                <div class="category-item active" data-category="artists">
+                    <div class="category-content">
+                        <div class="category-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="category-text">艺术家</div>
+                    </div>
+                    <div class="category-count">342</div>
+                </div>
+                
+                <div class="category-item" data-category="albums">
+                    <div class="category-content">
+                        <div class="category-icon">
+                            <i class="fas fa-compact-disc"></i>
+                        </div>
+                        <div class="category-text">专辑</div>
+                    </div>
+                    <div class="category-count">156</div>
+                </div>
+                
+                <div class="category-item" data-category="songs">
+                    <div class="category-content">
+                        <div class="category-icon">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <div class="category-text">歌曲</div>
+                    </div>
+                    <div class="category-count">2,847</div>
+                </div>
+                
+                <div class="category-item" data-category="playlists">
+                    <div class="category-content">
+                        <div class="category-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div class="category-text">播放列表</div>
+                    </div>
+                    <div class="category-count">23</div>
+                </div>
+                
+                <div class="category-item" data-category="genres">
+                    <div class="category-content">
+                        <div class="category-icon">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="category-text">流派</div>
+                    </div>
+                    <div class="category-count">18</div>
+                </div>
+                
+                <div class="category-item" data-category="recently">
+                    <div class="category-content">
+                        <div class="category-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div class="category-text">最近添加</div>
+                    </div>
+                    <div class="category-count">45</div>
+                </div>
+            </div>
+            
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <div class="content-header">
+                    <h3 class="content-title" id="contentTitle">艺术家</h3>
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="grid">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="view-btn" data-view="list">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 网格视图 -->
+                <div class="music-grid" id="musicGrid">
+                    <!-- 艺术家卡片 -->
+                    <div class="music-card">
+                        <div class="music-card-cover">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="music-card-title">Taylor Swift</div>
+                        <div class="music-card-subtitle">156首歌曲</div>
+                    </div>
+                    
+                    <div class="music-card">
+                        <div class="music-card-cover">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="music-card-title">Ed Sheeran</div>
+                        <div class="music-card-subtitle">89首歌曲</div>
+                    </div>
+                    
+                    <div class="music-card">
+                        <div class="music-card-cover">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="music-card-title">Billie Eilish</div>
+                        <div class="music-card-subtitle">73首歌曲</div>
+                    </div>
+                    
+                    <div class="music-card">
+                        <div class="music-card-cover">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="music-card-title">The Weeknd</div>
+                        <div class="music-card-subtitle">94首歌曲</div>
+                    </div>
+                    
+                    <div class="music-card">
+                        <div class="music-card-cover">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="music-card-title">Ariana Grande</div>
+                        <div class="music-card-subtitle">67首歌曲</div>
+                    </div>
+                    
+                    <div class="music-card">
+                        <div class="music-card-cover">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="music-card-title">Justin Bieber</div>
+                        <div class="music-card-subtitle">82首歌曲</div>
+                    </div>
+                </div>
+                
+                <!-- 列表视图 -->
+                <div class="music-list" id="musicList">
+                    <div class="music-item">
+                        <div class="music-item-cover">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="music-item-info">
+                            <div class="music-item-title">Taylor Swift</div>
+                            <div class="music-item-subtitle">156首歌曲 • 12张专辑</div>
+                        </div>
+                        <div class="music-item-action">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="music-item">
+                        <div class="music-item-cover">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="music-item-info">
+                            <div class="music-item-title">Ed Sheeran</div>
+                            <div class="music-item-subtitle">89首歌曲 • 8张专辑</div>
+                        </div>
+                        <div class="music-item-action">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="music-item">
+                        <div class="music-item-cover">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="music-item-info">
+                            <div class="music-item-title">Billie Eilish</div>
+                            <div class="music-item-subtitle">73首歌曲 • 5张专辑</div>
+                        </div>
+                        <div class="music-item-action">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 加载占位符 -->
+                <div class="loading-placeholder" id="loadingPlaceholder" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <div>正在加载音乐库...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 统计栏 -->
+        <div class="stats-bar">
+            <div class="stats-item">
+                <div class="stats-number">2,847</div>
+                <div class="stats-label">歌曲</div>
+            </div>
+            <div class="stats-item">
+                <div class="stats-number">156</div>
+                <div class="stats-label">专辑</div>
+            </div>
+            <div class="stats-item">
+                <div class="stats-number">342</div>
+                <div class="stats-label">艺术家</div>
+            </div>
+            <div class="stats-item">
+                <div class="stats-number">23</div>
+                <div class="stats-label">播放列表</div>
+            </div>
+            <div class="stats-item">
+                <div class="stats-number">18.5 GB</div>
+                <div class="stats-label">总大小</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 分类切换
+        const categoryItems = document.querySelectorAll('.category-item');
+        const contentTitle = document.getElementById('contentTitle');
+        const musicGrid = document.getElementById('musicGrid');
+        const musicList = document.getElementById('musicList');
+        const loadingPlaceholder = document.getElementById('loadingPlaceholder');
+        
+        // 分类数据
+        const categoryData = {
+            artists: {
+                title: '艺术家',
+                gridItems: [
+                    { title: 'Taylor Swift', subtitle: '156首歌曲' },
+                    { title: 'Ed Sheeran', subtitle: '89首歌曲' },
+                    { title: 'Billie Eilish', subtitle: '73首歌曲' },
+                    { title: 'The Weeknd', subtitle: '94首歌曲' },
+                    { title: 'Ariana Grande', subtitle: '67首歌曲' },
+                    { title: 'Justin Bieber', subtitle: '82首歌曲' }
+                ],
+                listItems: [
+                    { title: 'Taylor Swift', subtitle: '156首歌曲 • 12张专辑' },
+                    { title: 'Ed Sheeran', subtitle: '89首歌曲 • 8张专辑' },
+                    { title: 'Billie Eilish', subtitle: '73首歌曲 • 5张专辑' }
+                ]
+            },
+            albums: {
+                title: '专辑',
+                gridItems: [
+                    { title: 'Midnights', subtitle: 'Taylor Swift' },
+                    { title: '÷ (Divide)', subtitle: 'Ed Sheeran' },
+                    { title: 'Happier Than Ever', subtitle: 'Billie Eilish' },
+                    { title: 'After Hours', subtitle: 'The Weeknd' },
+                    { title: 'Positions', subtitle: 'Ariana Grande' },
+                    { title: 'Justice', subtitle: 'Justin Bieber' }
+                ],
+                listItems: [
+                    { title: 'Midnights', subtitle: 'Taylor Swift • 2022 • 13首' },
+                    { title: '÷ (Divide)', subtitle: 'Ed Sheeran • 2017 • 16首' },
+                    { title: 'Happier Than Ever', subtitle: 'Billie Eilish • 2021 • 16首' }
+                ]
+            },
+            songs: {
+                title: '歌曲',
+                gridItems: [
+                    { title: 'Anti-Hero', subtitle: 'Taylor Swift' },
+                    { title: 'Shape of You', subtitle: 'Ed Sheeran' },
+                    { title: 'bad guy', subtitle: 'Billie Eilish' },
+                    { title: 'Blinding Lights', subtitle: 'The Weeknd' },
+                    { title: 'positions', subtitle: 'Ariana Grande' },
+                    { title: 'Peaches', subtitle: 'Justin Bieber' }
+                ],
+                listItems: [
+                    { title: 'Anti-Hero', subtitle: 'Taylor Swift • Midnights • 3:20' },
+                    { title: 'Shape of You', subtitle: 'Ed Sheeran • ÷ (Divide) • 3:53' },
+                    { title: 'bad guy', subtitle: 'Billie Eilish • WHEN WE ALL FALL ASLEEP, WHERE DO WE GO? • 3:14' }
+                ]
+            },
+            playlists: {
+                title: '播放列表',
+                gridItems: [
+                    { title: '我的最爱', subtitle: '45首歌曲' },
+                    { title: '最近播放', subtitle: '23首歌曲' },
+                    { title: '健身音乐', subtitle: '67首歌曲' },
+                    { title: '放松时光', subtitle: '34首歌曲' },
+                    { title: '工作专注', subtitle: '56首歌曲' },
+                    { title: '驾车音乐', subtitle: '78首歌曲' }
+                ],
+                listItems: [
+                    { title: '我的最爱', subtitle: '45首歌曲 • 3小时12分' },
+                    { title: '最近播放', subtitle: '23首歌曲 • 1小时34分' },
+                    { title: '健身音乐', subtitle: '67首歌曲 • 4小时8分' }
+                ]
+            },
+            genres: {
+                title: '流派',
+                gridItems: [
+                    { title: 'Pop', subtitle: '856首歌曲' },
+                    { title: 'Rock', subtitle: '423首歌曲' },
+                    { title: 'Hip-Hop', subtitle: '267首歌曲' },
+                    { title: 'Electronic', subtitle: '198首歌曲' },
+                    { title: 'Alternative', subtitle: '156首歌曲' },
+                    { title: 'R&B', subtitle: '134首歌曲' }
+                ],
+                listItems: [
+                    { title: 'Pop', subtitle: '856首歌曲 • 54小时' },
+                    { title: 'Rock', subtitle: '423首歌曲 • 28小时' },
+                    { title: 'Hip-Hop', subtitle: '267首歌曲 • 16小时' }
+                ]
+            },
+            recently: {
+                title: '最近添加',
+                gridItems: [
+                    { title: 'Karma', subtitle: 'Taylor Swift' },
+                    { title: 'Shivers', subtitle: 'Ed Sheeran' },
+                    { title: 'Happier Than Ever', subtitle: 'Billie Eilish' },
+                    { title: 'Take My Breath', subtitle: 'The Weeknd' },
+                    { title: 'pov', subtitle: 'Ariana Grande' },
+                    { title: 'Ghost', subtitle: 'Justin Bieber' }
+                ],
+                listItems: [
+                    { title: 'Karma', subtitle: 'Taylor Swift • 添加于 2天前' },
+                    { title: 'Shivers', subtitle: 'Ed Sheeran • 添加于 3天前' },
+                    { title: 'Happier Than Ever', subtitle: 'Billie Eilish • 添加于 5天前' }
+                ]
+            }
+        };
+        
+        // 切换分类
+        function switchCategory(category) {
+            const data = categoryData[category];
+            if (!data) return;
+            
+            // 显示加载状态
+            showLoading();
+            
+            setTimeout(() => {
+                // 更新标题
+                contentTitle.textContent = data.title;
+                
+                // 更新网格内容
+                updateGridContent(data.gridItems);
+                
+                // 更新列表内容
+                updateListContent(data.listItems);
+                
+                // 隐藏加载状态
+                hideLoading();
+            }, 500);
+        }
+        
+        // 更新网格内容
+        function updateGridContent(items) {
+            musicGrid.innerHTML = '';
+            
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'music-card';
+                card.innerHTML = `
+                    <div class="music-card-cover">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div class="music-card-title">${item.title}</div>
+                    <div class="music-card-subtitle">${item.subtitle}</div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    showMessage(`选择了: ${item.title}`);
+                });
+                
+                musicGrid.appendChild(card);
+            });
+        }
+        
+        // 更新列表内容
+        function updateListContent(items) {
+            musicList.innerHTML = '';
+            
+            items.forEach(item => {
+                const listItem = document.createElement('div');
+                listItem.className = 'music-item';
+                listItem.innerHTML = `
+                    <div class="music-item-cover">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div class="music-item-info">
+                        <div class="music-item-title">${item.title}</div>
+                        <div class="music-item-subtitle">${item.subtitle}</div>
+                    </div>
+                    <div class="music-item-action">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                `;
+                
+                listItem.addEventListener('click', () => {
+                    showMessage(`选择了: ${item.title}`);
+                });
+                
+                musicList.appendChild(listItem);
+            });
+        }
+        
+        // 显示加载状态
+        function showLoading() {
+            musicGrid.style.display = 'none';
+            musicList.style.display = 'none';
+            loadingPlaceholder.style.display = 'block';
+        }
+        
+        // 隐藏加载状态
+        function hideLoading() {
+            loadingPlaceholder.style.display = 'none';
+            
+            // 根据当前视图模式显示内容
+            const activeView = document.querySelector('.view-btn.active').dataset.view;
+            if (activeView === 'grid') {
+                musicGrid.style.display = 'grid';
+                musicList.style.display = 'none';
+            } else {
+                musicGrid.style.display = 'none';
+                musicList.style.display = 'block';
+            }
+        }
+        
+        // 显示消息
+        function showMessage(message) {
+            const originalTitle = contentTitle.textContent;
+            contentTitle.textContent = message;
+            
+            setTimeout(() => {
+                contentTitle.textContent = originalTitle;
+            }, 2000);
+        }
+        
+        // 绑定分类点击事件
+        categoryItems.forEach(item => {
+            item.addEventListener('click', () => {
+                // 移除所有活动状态
+                categoryItems.forEach(cat => cat.classList.remove('active'));
+                
+                // 添加当前活动状态
+                item.classList.add('active');
+                
+                // 切换内容
+                const category = item.dataset.category;
+                switchCategory(category);
+            });
+        });
+        
+        // 视图切换
+        const viewBtns = document.querySelectorAll('.view-btn');
+        
+        viewBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 移除所有活动状态
+                viewBtns.forEach(b => b.classList.remove('active'));
+                
+                // 添加当前活动状态
+                btn.classList.add('active');
+                
+                // 切换视图
+                const view = btn.dataset.view;
+                if (view === 'grid') {
+                    musicGrid.style.display = 'grid';
+                    musicList.style.display = 'none';
+                } else {
+                    musicGrid.style.display = 'none';
+                    musicList.style.display = 'block';
+                }
+            });
+        });
+        
+        // 搜索功能
+        const searchBar = document.querySelector('.search-bar');
+        
+        searchBar.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            
+            if (query.length > 0) {
+                contentTitle.textContent = `搜索结果: "${query}"`;
+                
+                // 模拟搜索结果
+                const searchResults = [
+                    { title: 'Shape of You', subtitle: 'Ed Sheeran • ÷ (Divide)' },
+                    { title: 'Anti-Hero', subtitle: 'Taylor Swift • Midnights' },
+                    { title: 'bad guy', subtitle: 'Billie Eilish • WHEN WE ALL FALL ASLEEP' }
+                ];
+                
+                updateGridContent(searchResults);
+                updateListContent(searchResults);
+            } else {
+                // 恢复当前分类
+                const activeCategory = document.querySelector('.category-item.active').dataset.category;
+                switchCategory(activeCategory);
+            }
+        });
+        
+        // 初始化
+        switchCategory('artists');
+    </script>
+</body>
+</html>

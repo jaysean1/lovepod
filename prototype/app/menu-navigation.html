@@ -1,0 +1,716 @@
+<!-- location: /Users/qiansui/Desktop/Projects/lovepod/prototype/app/menu-navigation.html -->
+<!-- iPod风格菜单导航界面 -->
+<!-- 展示长按中央按钮后的菜单系统和转盘导航操作 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPod Menu Navigation - 菜单导航</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .ipod-container {
+            width: 320px;
+            height: 560px;
+            background: linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .screen-area {
+            height: 58%;
+            background: linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-radius: 15px;
+            margin: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .menu-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .menu-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .menu-path {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .menu-list {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .menu-list::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .menu-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+        
+        .menu-item:hover {
+            background: rgba(0,122,255,0.1);
+        }
+        
+        .menu-item.selected {
+            background: linear-gradient(90deg, #007AFF 0%, #0056d6 100%);
+            box-shadow: 0 2px 10px rgba(0,122,255,0.3);
+        }
+        
+        .menu-item.selected::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: white;
+        }
+        
+        .menu-item-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .menu-item-icon {
+            width: 20px;
+            margin-right: 12px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .menu-item-text {
+            flex: 1;
+        }
+        
+        .menu-item-subtitle {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+        
+        .menu-item-arrow {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .menu-item.selected .menu-item-arrow {
+            color: white;
+        }
+        
+        .menu-footer {
+            padding: 10px 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .wheel-control {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #e0e0e0 0%, #f0f0f0 100%);
+            box-shadow: inset 0 -8px 15px rgba(0,0,0,0.1), inset 0 8px 15px rgba(255,255,255,0.8);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(145deg, #f0f0f0 0%, #d0d0d0 100%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
+        }
+        
+        .wheel-center:active {
+            transform: translate(-50%, -50%) scale(0.95);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .wheel-button {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .wheel-button:hover {
+            color: #007AFF;
+            transform: scale(1.1);
+        }
+        
+        .wheel-button.up { top: 18px; left: 50%; transform: translateX(-50%); }
+        .wheel-button.down { bottom: 18px; left: 50%; transform: translateX(-50%); }
+        .wheel-button.left { left: 18px; top: 50%; transform: translateY(-50%); }
+        .wheel-button.right { right: 18px; top: 50%; transform: translateY(-50%); }
+        
+        .selection-highlight {
+            position: absolute;
+            left: 0;
+            height: 45px;
+            width: 100%;
+            background: linear-gradient(90deg, rgba(0,122,255,0.2) 0%, transparent 100%);
+            border-radius: 0 4px 4px 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .breadcrumb-item {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .breadcrumb-item.active {
+            color: #007AFF;
+        }
+        
+        .menu-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .menu-count {
+            font-size: 11px;
+            color: #888;
+        }
+        
+        .battery-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .battery-icon {
+            width: 20px;
+            height: 10px;
+            border: 1px solid #666;
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .battery-icon::after {
+            content: '';
+            position: absolute;
+            right: -3px;
+            top: 3px;
+            width: 2px;
+            height: 4px;
+            background: #666;
+            border-radius: 0 1px 1px 0;
+        }
+        
+        .battery-fill {
+            height: 8px;
+            background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+            border-radius: 1px;
+            width: 75%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="ipod-container">
+        <!-- 屏幕区域 -->
+        <div class="screen-area">
+            <div class="menu-container">
+                <!-- 菜单头部 -->
+                <div class="menu-header">
+                    <div>
+                        <div class="menu-title">主菜单</div>
+                        <div class="breadcrumb">
+                            <span class="breadcrumb-item active">iPod</span>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                            <span class="breadcrumb-item">菜单</span>
+                        </div>
+                    </div>
+                    <div class="battery-indicator">
+                        <div class="battery-icon">
+                            <div class="battery-fill"></div>
+                        </div>
+                        <span>75%</span>
+                    </div>
+                </div>
+                
+                <!-- 菜单列表 -->
+                <div class="menu-list">
+                    <div class="selection-highlight" id="selectionHighlight"></div>
+                    
+                    <div class="menu-item selected" data-index="0">
+                        <div class="menu-item-content">
+                            <div class="menu-item-icon">
+                                <i class="fas fa-music"></i>
+                            </div>
+                            <div class="menu-item-text">
+                                <div>音乐库</div>
+                                <div class="menu-item-subtitle">浏览所有音乐</div>
+                            </div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-item" data-index="1">
+                        <div class="menu-item-content">
+                            <div class="menu-item-icon">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <div class="menu-item-text">
+                                <div>正在播放</div>
+                                <div class="menu-item-subtitle">当前播放队列</div>
+                            </div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-item" data-index="2">
+                        <div class="menu-item-content">
+                            <div class="menu-item-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="menu-item-text">
+                                <div>我的最爱</div>
+                                <div class="menu-item-subtitle">收藏的音乐</div>
+                            </div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-item" data-index="3">
+                        <div class="menu-item-content">
+                            <div class="menu-item-icon">
+                                <i class="fas fa-list"></i>
+                            </div>
+                            <div class="menu-item-text">
+                                <div>播放列表</div>
+                                <div class="menu-item-subtitle">自定义播放列表</div>
+                            </div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-item" data-index="4">
+                        <div class="menu-item-content">
+                            <div class="menu-item-icon">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <div class="menu-item-text">
+                                <div>最近播放</div>
+                                <div class="menu-item-subtitle">播放历史</div>
+                            </div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-item" data-index="5">
+                        <div class="menu-item-content">
+                            <div class="menu-item-icon">
+                                <i class="fas fa-shuffle"></i>
+                            </div>
+                            <div class="menu-item-text">
+                                <div>随机播放</div>
+                                <div class="menu-item-subtitle">随机播放所有音乐</div>
+                            </div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-item" data-index="6">
+                        <div class="menu-item-content">
+                            <div class="menu-item-icon">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="menu-item-text">
+                                <div>设置</div>
+                                <div class="menu-item-subtitle">应用设置</div>
+                            </div>
+                        </div>
+                        <div class="menu-item-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 菜单底部 -->
+                <div class="menu-footer">
+                    <div class="menu-stats">
+                        <div class="menu-count">7项</div>
+                        <div>转盘导航 • 中央按钮确认</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 转盘控制 -->
+        <div class="wheel-control">
+            <button class="wheel-button up" title="返回">
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            <button class="wheel-button down" title="播放">
+                <i class="fas fa-play"></i>
+            </button>
+            <button class="wheel-button left" title="上一项">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="wheel-button right" title="下一项">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <div class="wheel-center">
+                <i class="fas fa-check text-sm text-gray-600"></i>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 菜单状态管理
+        let selectedIndex = 0;
+        const menuItems = document.querySelectorAll('.menu-item');
+        const selectionHighlight = document.getElementById('selectionHighlight');
+        const menuList = document.querySelector('.menu-list');
+        
+        // 更新选择高亮
+        function updateSelection() {
+            // 移除所有选中状态
+            menuItems.forEach(item => item.classList.remove('selected'));
+            
+            // 添加当前选中状态
+            if (menuItems[selectedIndex]) {
+                menuItems[selectedIndex].classList.add('selected');
+                
+                // 更新高亮位置
+                const itemRect = menuItems[selectedIndex].getBoundingClientRect();
+                const listRect = menuList.getBoundingClientRect();
+                const highlightTop = itemRect.top - listRect.top + menuList.scrollTop;
+                
+                selectionHighlight.style.top = `${highlightTop}px`;
+                
+                // 确保选中项在可见区域
+                menuItems[selectedIndex].scrollIntoView({
+                    block: 'nearest',
+                    behavior: 'smooth'
+                });
+            }
+        }
+        
+        // 向上导航
+        function navigateUp() {
+            selectedIndex = Math.max(0, selectedIndex - 1);
+            updateSelection();
+        }
+        
+        // 向下导航
+        function navigateDown() {
+            selectedIndex = Math.min(menuItems.length - 1, selectedIndex + 1);
+            updateSelection();
+        }
+        
+        // 确认选择
+        function confirmSelection() {
+            const selectedItem = menuItems[selectedIndex];
+            if (selectedItem) {
+                const itemText = selectedItem.querySelector('.menu-item-text div').textContent;
+                
+                // 视觉反馈
+                selectedItem.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    selectedItem.style.transform = 'scale(1)';
+                }, 150);
+                
+                // 根据选择执行相应操作
+                switch (selectedIndex) {
+                    case 0:
+                        showSubMenu('音乐库', [
+                            { icon: 'fas fa-user', text: '艺术家', subtitle: '按艺术家浏览' },
+                            { icon: 'fas fa-compact-disc', text: '专辑', subtitle: '按专辑浏览' },
+                            { icon: 'fas fa-music', text: '歌曲', subtitle: '所有歌曲' },
+                            { icon: 'fas fa-folder', text: '流派', subtitle: '按流派浏览' }
+                        ]);
+                        break;
+                    case 1:
+                        showMessage('正在播放', '返回播放界面...');
+                        break;
+                    case 2:
+                        showMessage('我的最爱', '加载收藏的音乐...');
+                        break;
+                    case 3:
+                        showSubMenu('播放列表', [
+                            { icon: 'fas fa-plus', text: '新建播放列表', subtitle: '创建新的播放列表' },
+                            { icon: 'fas fa-list', text: '我的播放列表 1', subtitle: '25首歌曲' },
+                            { icon: 'fas fa-list', text: '我的播放列表 2', subtitle: '18首歌曲' }
+                        ]);
+                        break;
+                    case 4:
+                        showMessage('最近播放', '加载播放历史...');
+                        break;
+                    case 5:
+                        showMessage('随机播放', '开始随机播放所有音乐...');
+                        break;
+                    case 6:
+                        showSubMenu('设置', [
+                            { icon: 'fas fa-volume-up', text: '音量设置', subtitle: '调节音量选项' },
+                            { icon: 'fas fa-clock', text: '睡眠定时器', subtitle: '设置睡眠定时器' },
+                            { icon: 'fas fa-palette', text: '显示设置', subtitle: '界面显示选项' },
+                            { icon: 'fas fa-info-circle', text: '关于', subtitle: '应用信息' }
+                        ]);
+                        break;
+                }
+            }
+        }
+        
+        // 显示子菜单
+        function showSubMenu(title, items) {
+            const menuContainer = document.querySelector('.menu-container');
+            const menuTitle = document.querySelector('.menu-title');
+            const breadcrumb = document.querySelector('.breadcrumb');
+            const menuListContainer = document.querySelector('.menu-list');
+            
+            // 更新标题和面包屑
+            menuTitle.textContent = title;
+            breadcrumb.innerHTML = `
+                <span class="breadcrumb-item">iPod</span>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <span class="breadcrumb-item">菜单</span>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <span class="breadcrumb-item active">${title}</span>
+            `;
+            
+            // 清空当前菜单
+            menuListContainer.innerHTML = '<div class="selection-highlight" id="selectionHighlight"></div>';
+            
+            // 添加子菜单项
+            items.forEach((item, index) => {
+                const menuItem = document.createElement('div');
+                menuItem.className = `menu-item ${index === 0 ? 'selected' : ''}`;
+                menuItem.dataset.index = index;
+                menuItem.innerHTML = `
+                    <div class="menu-item-content">
+                        <div class="menu-item-icon">
+                            <i class="${item.icon}"></i>
+                        </div>
+                        <div class="menu-item-text">
+                            <div>${item.text}</div>
+                            <div class="menu-item-subtitle">${item.subtitle}</div>
+                        </div>
+                    </div>
+                    <div class="menu-item-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                `;
+                menuListContainer.appendChild(menuItem);
+            });
+            
+            // 重置选择索引
+            selectedIndex = 0;
+            
+            // 更新引用
+            const newMenuItems = document.querySelectorAll('.menu-item');
+            const newSelectionHighlight = document.getElementById('selectionHighlight');
+            
+            // 重新绑定事件
+            setTimeout(() => {
+                updateSelection();
+            }, 100);
+        }
+        
+        // 显示消息
+        function showMessage(title, message) {
+            const menuTitle = document.querySelector('.menu-title');
+            const originalTitle = menuTitle.textContent;
+            
+            menuTitle.textContent = title;
+            
+            setTimeout(() => {
+                menuTitle.textContent = originalTitle;
+            }, 2000);
+        }
+        
+        // 返回上级菜单
+        function goBack() {
+            location.reload(); // 简单重新加载页面
+        }
+        
+        // 按钮事件绑定
+        document.querySelector('.wheel-button.up').addEventListener('click', (e) => {
+            e.stopPropagation();
+            goBack();
+        });
+        
+        document.querySelector('.wheel-button.down').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showMessage('播放', '返回播放界面...');
+        });
+        
+        document.querySelector('.wheel-button.left').addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigateUp();
+        });
+        
+        document.querySelector('.wheel-button.right').addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigateDown();
+        });
+        
+        document.querySelector('.wheel-center').addEventListener('click', (e) => {
+            e.stopPropagation();
+            confirmSelection();
+        });
+        
+        // 转盘旋转导航
+        let isRotating = false;
+        let startAngle = 0;
+        let totalRotation = 0;
+        
+        const wheelControl = document.querySelector('.wheel-control');
+        
+        function getAngle(e, element) {
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            return Math.atan2(e.clientY - centerY, e.clientX - centerX);
+        }
+        
+        wheelControl.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.wheel-center') || e.target.closest('.wheel-button')) return;
+            
+            isRotating = true;
+            startAngle = getAngle(e, wheelControl);
+            totalRotation = 0;
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isRotating) return;
+            
+            const currentAngle = getAngle(e, wheelControl);
+            let deltaAngle = currentAngle - startAngle;
+            
+            // 处理角度跳跃
+            if (deltaAngle > Math.PI) deltaAngle -= 2 * Math.PI;
+            if (deltaAngle < -Math.PI) deltaAngle += 2 * Math.PI;
+            
+            totalRotation += deltaAngle;
+            startAngle = currentAngle;
+            
+            // 根据旋转方向导航
+            if (Math.abs(totalRotation) > 0.3) {
+                if (totalRotation > 0) {
+                    navigateDown();
+                } else {
+                    navigateUp();
+                }
+                totalRotation = 0;
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isRotating = false;
+        });
+        
+        // 键盘导航支持
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    navigateUp();
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    navigateDown();
+                    break;
+                case 'Enter':
+                case ' ':
+                    e.preventDefault();
+                    confirmSelection();
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    goBack();
+                    break;
+            }
+        });
+        
+        // 初始化
+        updateSelection();
+    </script>
+</body>
+</html>

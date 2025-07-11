@@ -1,0 +1,769 @@
+<!-- location: /Users/qiansui/Desktop/Projects/lovepod/prototype/index.html -->
+<!-- iPod风格音乐播放器原型集合 -->
+<!-- 主入口页面，使用iframe展示所有原型界面 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPod Music Player - 原型集合</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .header .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #007AFF 0%, #0056d6 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            box-shadow: 0 4px 15px rgba(0,122,255,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .header .badges {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .badge-primary {
+            background: linear-gradient(135deg, #007AFF 0%, #0056d6 100%);
+            color: white;
+        }
+        
+        .badge-success {
+            background: linear-gradient(135deg, #34C759 0%, #00A000 100%);
+            color: white;
+        }
+        
+        .badge-warning {
+            background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
+            color: white;
+        }
+        
+        .prototype-section {
+            margin-bottom: 50px;
+        }
+        
+        .section-header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            border-bottom: 2px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+        
+        .section-icon.core {
+            background: linear-gradient(135deg, #007AFF 0%, #0056d6 100%);
+        }
+        
+        .section-icon.interaction {
+            background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
+        }
+        
+        .section-icon.features {
+            background: linear-gradient(135deg, #34C759 0%, #00A000 100%);
+        }
+        
+        .section-icon.states {
+            background: linear-gradient(135deg, #FF3B30 0%, #D70015 100%);
+        }
+        
+        .section-description {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .section-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .feature-tag {
+            background: rgba(0,122,255,0.1);
+            color: #007AFF;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .prototype-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            background: white;
+            padding: 30px;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .prototype-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .prototype-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .prototype-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+        }
+        
+        .prototype-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .prototype-subtitle {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 12px;
+        }
+        
+        .prototype-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .prototype-tag {
+            background: rgba(0,122,255,0.2);
+            color: #007AFF;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .prototype-iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+            background: white;
+        }
+        
+        .prototype-footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .prototype-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #007AFF 0%, #0056d6 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .prototype-stats {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .navigation {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            position: sticky;
+            top: 20px;
+            z-index: 20;
+        }
+        
+        .nav-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .nav-link {
+            background: rgba(0,122,255,0.1);
+            color: #007AFF;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background: rgba(0,122,255,0.2);
+            transform: translateY(-1px);
+        }
+        
+        .footer {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-top: 50px;
+        }
+        
+        .footer-content {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .footer-link {
+            color: #007AFF;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-link:hover {
+            color: #0056d6;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .prototype-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .prototype-iframe {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>
+                <div class="logo">
+                    <i class="fas fa-music"></i>
+                </div>
+                iPod Music Player
+            </h1>
+            <p>经典iPod风格音乐播放器原型集合 - 高保真交互设计</p>
+            <div class="badges">
+                <span class="badge badge-primary">
+                    <i class="fas fa-mobile-alt"></i>
+                    响应式设计
+                </span>
+                <span class="badge badge-success">
+                    <i class="fas fa-hand-pointer"></i>
+                    交互原型
+                </span>
+                <span class="badge badge-warning">
+                    <i class="fab fa-apple"></i>
+                    Apple Music集成
+                </span>
+            </div>
+        </div>
+        
+        <!-- 导航 -->
+        <div class="navigation">
+            <div class="nav-title">
+                <i class="fas fa-compass mr-2"></i>
+                快速导航
+            </div>
+            <div class="nav-links">
+                <a href="#core-interfaces" class="nav-link">核心界面</a>
+                <a href="#interaction-components" class="nav-link">交互组件</a>
+                <a href="#feature-pages" class="nav-link">功能页面</a>
+                <a href="#state-handling" class="nav-link">状态处理</a>
+            </div>
+        </div>
+        
+        <!-- 核心界面 -->
+        <div class="prototype-section" id="core-interfaces">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <div class="section-icon core">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    核心界面
+                </h2>
+                <p class="section-description">
+                    展示应用的主要界面设计，包括播放器主界面和转盘控制组件
+                </p>
+                <div class="section-features">
+                    <span class="feature-tag">60/40黄金比例</span>
+                    <span class="feature-tag">专辑封面展示</span>
+                    <span class="feature-tag">播放进度控制</span>
+                    <span class="feature-tag">经典iPod设计</span>
+                </div>
+            </div>
+            <div class="prototype-grid">
+                <div class="prototype-card">
+                    <div class="prototype-header">
+                        <h3 class="prototype-title">
+                            <i class="fas fa-play-circle"></i>
+                            主播放界面
+                        </h3>
+                        <p class="prototype-subtitle">
+                            完整的iPod风格音乐播放器主界面，包含屏幕区域和转盘控制
+                        </p>
+                        <div class="prototype-tags">
+                            <span class="prototype-tag">主界面</span>
+                            <span class="prototype-tag">播放控制</span>
+                            <span class="prototype-tag">专辑展示</span>
+                        </div>
+                    </div>
+                    <iframe src="app/main-player.html" class="prototype-iframe"></iframe>
+                    <div class="prototype-footer">
+                        <div class="prototype-stats">
+                            <i class="fas fa-code"></i>
+                            核心功能 • 交互完整
+                        </div>
+                        <div class="prototype-actions">
+                            <a href="app/main-player.html" target="_blank" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i>
+                                独立打开
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 交互组件 -->
+        <div class="prototype-section" id="interaction-components">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <div class="section-icon interaction">
+                        <i class="fas fa-hand-pointer"></i>
+                    </div>
+                    交互组件
+                </h2>
+                <p class="section-description">
+                    详细展示转盘控制的交互设计，包括旋转手势、触觉反馈和精确控制
+                </p>
+                <div class="section-features">
+                    <span class="feature-tag">旋转手势</span>
+                    <span class="feature-tag">触觉反馈</span>
+                    <span class="feature-tag">精确控制</span>
+                    <span class="feature-tag">视觉反馈</span>
+                </div>
+            </div>
+            <div class="prototype-grid">
+                <div class="prototype-card">
+                    <div class="prototype-header">
+                        <h3 class="prototype-title">
+                            <i class="fas fa-circle-notch"></i>
+                            转盘控制组件
+                        </h3>
+                        <p class="prototype-subtitle">
+                            经典iPod转盘的详细交互设计，支持旋转、点击和长按操作
+                        </p>
+                        <div class="prototype-tags">
+                            <span class="prototype-tag">转盘控制</span>
+                            <span class="prototype-tag">手势识别</span>
+                            <span class="prototype-tag">操作演示</span>
+                        </div>
+                    </div>
+                    <iframe src="app/wheel-control.html" class="prototype-iframe"></iframe>
+                    <div class="prototype-footer">
+                        <div class="prototype-stats">
+                            <i class="fas fa-mouse-pointer"></i>
+                            交互演示 • 实时反馈
+                        </div>
+                        <div class="prototype-actions">
+                            <a href="app/wheel-control.html" target="_blank" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i>
+                                独立打开
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 功能页面 -->
+        <div class="prototype-section" id="feature-pages">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <div class="section-icon features">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    功能页面
+                </h2>
+                <p class="section-description">
+                    完整的功能页面设计，包括菜单导航和音乐库浏览
+                </p>
+                <div class="section-features">
+                    <span class="feature-tag">菜单导航</span>
+                    <span class="feature-tag">音乐库浏览</span>
+                    <span class="feature-tag">分类展示</span>
+                    <span class="feature-tag">搜索功能</span>
+                </div>
+            </div>
+            <div class="prototype-grid">
+                <div class="prototype-card">
+                    <div class="prototype-header">
+                        <h3 class="prototype-title">
+                            <i class="fas fa-bars"></i>
+                            菜单导航
+                        </h3>
+                        <p class="prototype-subtitle">
+                            iPod风格的菜单导航系统，支持转盘操作和层级浏览
+                        </p>
+                        <div class="prototype-tags">
+                            <span class="prototype-tag">菜单系统</span>
+                            <span class="prototype-tag">导航层级</span>
+                            <span class="prototype-tag">转盘操作</span>
+                        </div>
+                    </div>
+                    <iframe src="app/menu-navigation.html" class="prototype-iframe"></iframe>
+                    <div class="prototype-footer">
+                        <div class="prototype-stats">
+                            <i class="fas fa-sitemap"></i>
+                            导航系统 • 层级结构
+                        </div>
+                        <div class="prototype-actions">
+                            <a href="app/menu-navigation.html" target="_blank" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i>
+                                独立打开
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="prototype-card">
+                    <div class="prototype-header">
+                        <h3 class="prototype-title">
+                            <i class="fas fa-music"></i>
+                            音乐库浏览
+                        </h3>
+                        <p class="prototype-subtitle">
+                            完整的音乐库浏览界面，集成Apple Music服务和分类展示
+                        </p>
+                        <div class="prototype-tags">
+                            <span class="prototype-tag">音乐库</span>
+                            <span class="prototype-tag">分类浏览</span>
+                            <span class="prototype-tag">搜索功能</span>
+                        </div>
+                    </div>
+                    <iframe src="app/music-library.html" class="prototype-iframe"></iframe>
+                    <div class="prototype-footer">
+                        <div class="prototype-stats">
+                            <i class="fab fa-apple"></i>
+                            Apple Music • 内容丰富
+                        </div>
+                        <div class="prototype-actions">
+                            <a href="app/music-library.html" target="_blank" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i>
+                                独立打开
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 状态处理 -->
+        <div class="prototype-section" id="state-handling">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <div class="section-icon states">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    状态处理
+                </h2>
+                <p class="section-description">
+                    用户友好的状态处理界面，包括权限申请和错误状态的优雅处理
+                </p>
+                <div class="section-features">
+                    <span class="feature-tag">权限管理</span>
+                    <span class="feature-tag">错误处理</span>
+                    <span class="feature-tag">用户引导</span>
+                    <span class="feature-tag">恢复机制</span>
+                </div>
+            </div>
+            <div class="prototype-grid">
+                <div class="prototype-card">
+                    <div class="prototype-header">
+                        <h3 class="prototype-title">
+                            <i class="fas fa-shield-alt"></i>
+                            权限申请
+                        </h3>
+                        <p class="prototype-subtitle">
+                            友好的权限申请流程，延迟申请和清晰的用户引导
+                        </p>
+                        <div class="prototype-tags">
+                            <span class="prototype-tag">权限管理</span>
+                            <span class="prototype-tag">用户引导</span>
+                            <span class="prototype-tag">延迟申请</span>
+                        </div>
+                    </div>
+                    <iframe src="app/permission-request.html" class="prototype-iframe"></iframe>
+                    <div class="prototype-footer">
+                        <div class="prototype-stats">
+                            <i class="fas fa-user-shield"></i>
+                            隐私保护 • 用户友好
+                        </div>
+                        <div class="prototype-actions">
+                            <a href="app/permission-request.html" target="_blank" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i>
+                                独立打开
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="prototype-card">
+                    <div class="prototype-header">
+                        <h3 class="prototype-title">
+                            <i class="fas fa-bug"></i>
+                            错误状态
+                        </h3>
+                        <p class="prototype-subtitle">
+                            完善的错误处理机制，网络、权限、内容等各种错误的优雅处理
+                        </p>
+                        <div class="prototype-tags">
+                            <span class="prototype-tag">错误处理</span>
+                            <span class="prototype-tag">恢复机制</span>
+                            <span class="prototype-tag">用户体验</span>
+                        </div>
+                    </div>
+                    <iframe src="app/error-states.html" class="prototype-iframe"></iframe>
+                    <div class="prototype-footer">
+                        <div class="prototype-stats">
+                            <i class="fas fa-tools"></i>
+                            智能恢复 • 问题解决
+                        </div>
+                        <div class="prototype-actions">
+                            <a href="app/error-states.html" target="_blank" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i>
+                                独立打开
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <div class="footer">
+            <div class="footer-content">
+                <p><strong>iPod Music Player 原型集合</strong></p>
+                <p>基于经典iPod设计的现代音乐播放器原型，展示了完整的用户体验设计和交互细节。</p>
+                <p>使用现代Web技术实现，包含Tailwind CSS、FontAwesome图标和响应式设计。</p>
+            </div>
+            <div class="footer-links">
+                <a href="#" class="footer-link">设计说明</a>
+                <a href="#" class="footer-link">技术文档</a>
+                <a href="#" class="footer-link">源代码</a>
+                <a href="#" class="footer-link">反馈建议</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 平滑滚动到锚点
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // 添加滚动效果
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const sections = document.querySelectorAll('.prototype-section');
+            
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                const inView = rect.top < window.innerHeight && rect.bottom > 0;
+                
+                if (inView) {
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                } else {
+                    section.style.opacity = '0.8';
+                    section.style.transform = 'translateY(20px)';
+                }
+            });
+        });
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 设置初始状态
+            const sections = document.querySelectorAll('.prototype-section');
+            sections.forEach(section => {
+                section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            });
+            
+            // 添加加载动画
+            const cards = document.querySelectorAll('.prototype-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

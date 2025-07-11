@@ -1,0 +1,600 @@
+<!-- location: /Users/qiansui/Desktop/Projects/lovepod/prototype/app/permission-request.html -->
+<!-- iPod风格权限申请界面 -->
+<!-- 展示Apple Music权限申请的友好引导流程 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPod Permission Request - 权限申请</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .permission-container {
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .permission-states {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+        
+        .state-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .state-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #007AFF 0%, #0056d6 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .state-icon.warning {
+            background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
+        }
+        
+        .state-icon.error {
+            background: linear-gradient(135deg, #FF3B30 0%, #D70015 100%);
+        }
+        
+        .state-icon.success {
+            background: linear-gradient(135deg, #34C759 0%, #00A000 100%);
+        }
+        
+        .state-icon::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .state-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .state-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .state-action {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #007AFF 0%, #0056d6 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0,122,255,0.3);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #FF3B30 0%, #D70015 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255,59,48,0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #34C759 0%, #00A000 100%);
+            color: white;
+        }
+        
+        .apple-music-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: linear-gradient(135deg, #FC3C44 0%, #FF4E50 100%);
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .permission-flow {
+            background: #1a1a1a;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .flow-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .flow-steps {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+        }
+        
+        .flow-step {
+            text-align: center;
+            position: relative;
+        }
+        
+        .flow-step::after {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 60px;
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, #007AFF, transparent);
+        }
+        
+        .flow-step:last-child::after {
+            display: none;
+        }
+        
+        .flow-step-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #007AFF 0%, #0056d6 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 20px;
+        }
+        
+        .flow-step-text {
+            font-size: 12px;
+            color: #888;
+            max-width: 100px;
+        }
+        
+        .tips-section {
+            background: rgba(0,122,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .tips-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #007AFF;
+            margin-bottom: 10px;
+        }
+        
+        .tips-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tips-list li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .tips-list li::before {
+            content: '•';
+            color: #007AFF;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        
+        .status-granted {
+            background: rgba(52,199,89,0.1);
+            color: #34C759;
+        }
+        
+        .status-denied {
+            background: rgba(255,59,48,0.1);
+            color: #FF3B30;
+        }
+        
+        .status-pending {
+            background: rgba(255,149,0,0.1);
+            color: #FF9500;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="permission-container">
+        <!-- 权限申请流程 -->
+        <div class="permission-flow">
+            <div class="flow-title">
+                <i class="fas fa-music mr-2"></i>
+                音乐库访问权限
+            </div>
+            
+            <div class="apple-music-logo">
+                <i class="fab fa-apple"></i>
+                Apple Music 集成
+            </div>
+            
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="flow-step-icon">
+                        <i class="fas fa-play"></i>
+                    </div>
+                    <div class="flow-step-text">点击播放按钮</div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="flow-step-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="flow-step-text">请求权限</div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="flow-step-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="flow-step-text">授权访问</div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="flow-step-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div class="flow-step-text">享受音乐</div>
+                </div>
+            </div>
+            
+            <p style="color: #888; font-size: 14px; margin-top: 20px;">
+                为了提供完整的音乐播放体验，我们需要访问您的音乐库
+            </p>
+        </div>
+        
+        <!-- 权限状态展示 -->
+        <div class="permission-states">
+            <!-- 首次使用 -->
+            <div class="state-card">
+                <div class="state-icon">
+                    <i class="fas fa-hand-pointer"></i>
+                </div>
+                <div class="state-title">首次使用</div>
+                <div class="state-description">
+                    欢迎使用iPod音乐播放器！点击播放按钮开始您的音乐之旅。我们会在您需要时请求必要的权限。
+                </div>
+                <div class="state-action">
+                    <button class="btn btn-primary" onclick="requestPermission()">
+                        <i class="fas fa-play"></i>
+                        开始播放
+                    </button>
+                    <div class="status-indicator status-pending">
+                        <i class="fas fa-clock"></i>
+                        等待用户操作
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 权限拒绝 -->
+            <div class="state-card">
+                <div class="state-icon error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="state-title">权限被拒绝</div>
+                <div class="state-description">
+                    看起来音乐库访问权限被拒绝了。请前往系统设置中为应用开启音乐库访问权限，以获得完整的使用体验。
+                </div>
+                <div class="state-action">
+                    <button class="btn btn-primary" onclick="openSettings()">
+                        <i class="fas fa-cog"></i>
+                        前往设置
+                    </button>
+                    <button class="btn btn-secondary" onclick="retryPermission()">
+                        <i class="fas fa-redo"></i>
+                        重试
+                    </button>
+                    <div class="status-indicator status-denied">
+                        <i class="fas fa-times"></i>
+                        权限被拒绝
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 权限已授予 -->
+            <div class="state-card">
+                <div class="state-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="state-title">权限已授予</div>
+                <div class="state-description">
+                    太棒了！您的音乐库访问权限已成功授予。现在可以享受完整的Apple Music体验了。
+                </div>
+                <div class="state-action">
+                    <button class="btn btn-success" onclick="startMusic()">
+                        <i class="fas fa-music"></i>
+                        开始音乐之旅
+                    </button>
+                    <div class="status-indicator status-granted">
+                        <i class="fas fa-check"></i>
+                        权限已授予
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 网络错误 -->
+            <div class="state-card">
+                <div class="state-icon warning">
+                    <i class="fas fa-wifi"></i>
+                </div>
+                <div class="state-title">网络连接问题</div>
+                <div class="state-description">
+                    无法连接到Apple Music服务。请检查您的网络连接，然后重试。您仍可以播放已下载的音乐。
+                </div>
+                <div class="state-action">
+                    <button class="btn btn-primary" onclick="checkNetwork()">
+                        <i class="fas fa-sync"></i>
+                        检查网络
+                    </button>
+                    <button class="btn btn-secondary" onclick="playOffline()">
+                        <i class="fas fa-download"></i>
+                        离线播放
+                    </button>
+                    <div class="status-indicator status-pending">
+                        <i class="fas fa-exclamation-circle"></i>
+                        网络异常
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 使用提示 -->
+        <div class="tips-section">
+            <div class="tips-title">
+                <i class="fas fa-lightbulb mr-2"></i>
+                使用提示
+            </div>
+            <ul class="tips-list">
+                <li>应用启动时不会主动请求权限，只有当您点击播放时才会弹出权限请求</li>
+                <li>如果权限被拒绝，您可以随时在系统设置中重新开启</li>
+                <li>即使没有权限，您仍可以体验应用的界面和操作方式</li>
+                <li>我们承诺只在必要时访问您的音乐库，保护您的隐私</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // 权限请求
+        function requestPermission() {
+            showMessage('正在请求音乐库访问权限...', 'info');
+            
+            // 模拟权限请求过程
+            setTimeout(() => {
+                const granted = Math.random() > 0.3; // 70% 成功率
+                
+                if (granted) {
+                    showMessage('权限授予成功！', 'success');
+                    updatePermissionStatus('granted');
+                } else {
+                    showMessage('权限被拒绝', 'error');
+                    updatePermissionStatus('denied');
+                }
+            }, 1500);
+        }
+        
+        // 打开设置
+        function openSettings() {
+            showMessage('正在打开系统设置...', 'info');
+            
+            // 模拟打开设置
+            setTimeout(() => {
+                showMessage('请在设置中为应用开启音乐库访问权限', 'info');
+            }, 1000);
+        }
+        
+        // 重试权限
+        function retryPermission() {
+            showMessage('重新请求权限...', 'info');
+            
+            setTimeout(() => {
+                requestPermission();
+            }, 500);
+        }
+        
+        // 开始音乐
+        function startMusic() {
+            showMessage('正在加载您的音乐库...', 'success');
+            
+            setTimeout(() => {
+                showMessage('欢迎使用iPod音乐播放器！', 'success');
+            }, 1000);
+        }
+        
+        // 检查网络
+        function checkNetwork() {
+            showMessage('正在检查网络连接...', 'info');
+            
+            setTimeout(() => {
+                const connected = Math.random() > 0.4; // 60% 连接成功
+                
+                if (connected) {
+                    showMessage('网络连接正常', 'success');
+                    updatePermissionStatus('granted');
+                } else {
+                    showMessage('网络连接失败，请检查您的网络设置', 'error');
+                }
+            }, 2000);
+        }
+        
+        // 离线播放
+        function playOffline() {
+            showMessage('切换到离线模式...', 'info');
+            
+            setTimeout(() => {
+                showMessage('已切换到离线模式，可以播放已下载的音乐', 'success');
+            }, 1000);
+        }
+        
+        // 更新权限状态
+        function updatePermissionStatus(status) {
+            const statusElements = document.querySelectorAll('.status-indicator');
+            
+            statusElements.forEach(element => {
+                element.classList.remove('status-granted', 'status-denied', 'status-pending');
+                
+                switch (status) {
+                    case 'granted':
+                        element.classList.add('status-granted');
+                        element.innerHTML = '<i class="fas fa-check"></i>权限已授予';
+                        break;
+                    case 'denied':
+                        element.classList.add('status-denied');
+                        element.innerHTML = '<i class="fas fa-times"></i>权限被拒绝';
+                        break;
+                    case 'pending':
+                        element.classList.add('status-pending');
+                        element.innerHTML = '<i class="fas fa-clock"></i>等待用户操作';
+                        break;
+                }
+            });
+        }
+        
+        // 显示消息
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${getMessageClass(type)}`;
+            messageDiv.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="${getMessageIcon(type)}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            // 自动移除消息
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+        
+        // 获取消息样式类
+        function getMessageClass(type) {
+            switch (type) {
+                case 'success':
+                    return 'bg-green-500 text-white';
+                case 'error':
+                    return 'bg-red-500 text-white';
+                case 'info':
+                default:
+                    return 'bg-blue-500 text-white';
+            }
+        }
+        
+        // 获取消息图标
+        function getMessageIcon(type) {
+            switch (type) {
+                case 'success':
+                    return 'fas fa-check-circle';
+                case 'error':
+                    return 'fas fa-exclamation-triangle';
+                case 'info':
+                default:
+                    return 'fas fa-info-circle';
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 模拟检查当前权限状态
+            const permissionStatus = localStorage.getItem('musicPermission') || 'pending';
+            updatePermissionStatus(permissionStatus);
+        });
+    </script>
+</body>
+</html>
