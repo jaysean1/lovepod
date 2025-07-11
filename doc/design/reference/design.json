@@ -1,0 +1,111 @@
+{
+  "name": "iPod Classic UI",
+  "description": "A high-level, proportional design system for replicating the Apple iPod Classic UI on iOS. It uses relative units and a spacing system to ensure scalability and consistency.",
+  "colors": {
+    "background": "#FFFFFF",
+    "text": "#000000",
+    "highlightBackground": "#3478F6",
+    "highlightText": "#FFFFFF",
+    "statusBarBackground": "#F0F0F0",
+    "statusBarText": "#000000",
+    "divider": "#C8C7CC"
+  },
+  "spacing": {
+    "baseUnit": "8rem",
+    "xxs": "0.25 * @spacing.baseUnit",
+    "xs": "0.5 * @spacing.baseUnit",
+    "s": "1 * @spacing.baseUnit",
+    "m": "1.5 * @spacing.baseUnit",
+    "l": "2 * @spacing.baseUnit",
+    "xl": "3 * @spacing.baseUnit"
+  },
+  "typography": {
+    "fontFamily": "Helvetica Neue",
+    "scale": {
+      "body": "1.0rem",
+      "caption": "0.85rem",
+      "subtitle": "0.9rem",
+      "title": "1.1rem"
+    },
+    "weights": {
+      "normal": "400",
+      "bold": "700"
+    },
+    "styles": {
+      "statusBar": {
+        "fontScale": "@typography.scale.caption",
+        "fontWeight": "@typography.weights.bold"
+      },
+      "menuItem": {
+        "fontScale": "@typography.scale.body",
+        "fontWeight": "@typography.weights.bold"
+      },
+      "nowPlayingTrack": {
+        "fontScale": "@typography.scale.body",
+        "fontWeight": "@typography.weights.normal"
+      },
+      "nowPlayingArtist": {
+        "fontScale": "@typography.scale.subtitle",
+        "fontWeight": "@typography.weights.normal"
+      }
+    }
+  },
+  "layout": {
+    "cornerRadius": "@spacing.s",
+    "templates": {
+      "base": {
+        "headerHeight": "10%",
+        "contentHeight": "90%"
+      },
+      "menuSplitView": {
+        "inherits": "base",
+        "menuWidth": "50%",
+        "contentWidth": "50%",
+        "divider": "1px solid @colors.divider"
+      },
+      "nowPlaying": {
+        "inherits": "base",
+        "albumArtHeight": "45%",
+        "trackInfoHeight": "25%",
+        "scrubberHeight": "20%"
+      }
+    }
+  },
+  "components": {
+    "statusBar": {
+      "paddingHorizontal": "@spacing.m"
+    },
+    "menuList": {
+      "itemHeight": "auto",
+      "paddingVertical": "@spacing.s",
+      "paddingHorizontal": "@spacing.m",
+      "itemSpacing": "@spacing.xs"
+    },
+    "albumArt": {
+      "aspectRatio": "1:1",
+      "marginVertical": "@spacing.m",
+      "cornerRadius": "@spacing.xs"
+    },
+    "scrubber": {
+      "padding": "@spacing.m",
+      "trackHeight": "@spacing.xs",
+      "thumbSize": "@spacing.m"
+    }
+  },
+  "iconography": {
+    "style": "monochrome",
+    "weight": "bold",
+    "size": "1.2 * @typography.scale.body",
+    "commonIcons": [
+      "play.fill",
+      "pause.fill",
+      "forward.fill",
+      "backward.fill",
+      "battery.100",
+      "music.note",
+      "photo",
+      "video",
+      "gearshape.fill"
+    ]
+  }
+}
