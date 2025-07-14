@@ -113,12 +113,14 @@ class AppState: ObservableObject {
     @Published var playbackProgress: Double = 0.0
     @Published var duration: TimeInterval = 180.0
     @Published var currentTime: TimeInterval = 0.0
+    @Published var isUserSeekingProgress: Bool = false
     
     // MARK: - Spotify Integration
     @Published var spotifyPlaylists: [SpotifyPlaylist] = []
     @Published var currentSpotifyTrack: SpotifyTrack? = nil
     @Published var isSpotifyAuthenticated: Bool = false
     @Published var isSpotifyConnected: Bool = false
+    @Published var currentPlaylistURI: String? = nil  // 跟踪当前播放的playlist URI
     
     // MARK: - Playlist State (backward compatibility)
     @Published var playlists: [PlaylistModel] = PlaylistModel.mockData
@@ -126,6 +128,7 @@ class AppState: ObservableObject {
     // MARK: - Spotify Services
     private(set) var spotifyService: SpotifyService? = nil
     private var playlistService: SpotifyPlaylistService? = nil
+    private var webAPIManager: SpotifyWebAPIManager? = nil
     
     // MARK: - Theme State
     @Published var selectedTheme: String = "Classic"
@@ -172,6 +175,12 @@ class AppState: ObservableObject {
         print("✅ AppState (\(instanceID)): Configured playlist service")
     }
     
+    // MARK: - Web API Manager Integration
+    func setWebAPIManager(_ manager: SpotifyWebAPIManager) {
+        self.webAPIManager = manager
+        print("✅ AppState: Configured Web API manager")
+    }
+    
     // MARK: - Data Update Methods
     func updateSpotifyPlaylists(_ playlists: [SpotifyPlaylist]) {
         print("📊 AppState (\(instanceID)): Updating playlists from \(spotifyPlaylists.count) to \(playlists.count)")
@@ -195,15 +204,19 @@ class AppState: ObservableObject {
         currentTrackTitle = track.name
         currentArtist = track.primaryArtistName
         currentAlbum = track.album.name
-        duration = TimeInterval(track.durationMs) / 1000.0
+        duration = TimeInterval(track.durationMs ?? 180000) / 1000.0
     }
     
     private func updatePlayerState(from playerState: SpotifyPlayerState?) {
         guard let state = playerState else { return }
         
         isPlaying = state.isPlaying
-        currentTime = state.playbackPosition
-        playbackProgress = duration > 0 ? state.playbackPosition / duration : 0.0
+        
+        // 只有在用户不手动控制进度时才更新进度
+        if !isUserSeekingProgress {
+            currentTime = state.playbackPosition
+            playbackProgress = duration > 0 ? state.playbackPosition / duration : 0.0
+        }
     }
     
     // MARK: - Navigation Methods
@@ -286,16 +299,104 @@ class AppState: ObservableObject {
         
         let playlist = spotifyPlaylists[index]
         
-        // 触发 Spotify 播放
+        // 异步检查是否是当前正在播放的playlist
         Task {
+            let isCurrentlyPlaying = await isCurrentlyPlayingPlaylist(playlist: playlist)
+            
+            await MainActor.run {
+                if isCurrentlyPlaying {
+                    print("📱 Same playlist already playing, navigating to Now Playing")
+                    // 如果选中的是当前正在播放的playlist，直接进入Now Playing界面
+                    self.navigateTo(.nowPlaying)
+                    return
+                }
+                
+                print("🎵 Different playlist or not playing, starting new playback")
+                // 如果有其他播放内容正在播放，先停止
+                if self.isPlaying {
+                    print("⏹️ Stopping current playback before switching playlist")
+                }
+            }
+            
+            // 触发 Spotify 播放新的playlist
             do {
+                print("▶️ Starting playback for playlist: \(playlist.name)")
                 try await spotifyService?.play(uri: playlist.uri)
                 await MainActor.run {
+                    print("✅ Successfully started playlist, navigating to Now Playing")
+                    // 更新当前播放的playlist URI
+                    self.currentPlaylistURI = playlist.uri
                     self.navigateTo(.nowPlaying)
                 }
             } catch {
-                showError("Failed to play playlist: \(error.localizedDescription)")
+                await MainActor.run {
+                    self.showError("Failed to play playlist: \(error.localizedDescription)")
+                }
             }
+        }
+    }
+    
+    // 检查当前是否正在播放指定的playlist
+    private func isCurrentlyPlayingPlaylist(playlist: SpotifyPlaylist) async -> Bool {
+        print("🔍 Checking if playlist \(playlist.name) is currently playing...")
+        
+        // 优先使用本地状态检查 - 避免不必要的API调用
+        if let currentPlaylistURI = currentPlaylistURI {
+            let isCurrentPlaylist = currentPlaylistURI == playlist.uri
+            print("📱 Local state check: current=\(currentPlaylistURI), target=\(playlist.uri)")
+            print("📊 Is same playlist (local): \(isCurrentPlaylist)")
+            
+            if isCurrentPlaylist {
+                print("✅ Matched current playlist via local state - avoiding API call")
+                return true
+            }
+        }
+        
+        // 如果本地状态不匹配或为空，尝试通过Web API验证
+        guard let webAPIManager = webAPIManager else {
+            print("⚠️ No Web API manager available, using fallback logic")
+            return isPlaying && currentSpotifyTrack != nil && currentPlaylistURI == playlist.uri
+        }
+        
+        do {
+            if let playbackContext = await webAPIManager.getCurrentPlaybackContext() {
+                if let context = playbackContext.context {
+                    let isCurrentPlaylist = context.isPlaylist(withURI: playlist.uri)
+                    print("✅ Found active playback context via API")
+                    print("🎵 Current context: \(context.uri)")
+                    print("🎯 Target playlist: \(playlist.uri)")
+                    print("📊 Is same playlist (API): \(isCurrentPlaylist)")
+                    
+                    // 更新本地状态缓存
+                    if isCurrentPlaylist {
+                        await MainActor.run {
+                            self.currentPlaylistURI = playlist.uri
+                        }
+                    }
+                    
+                    return isCurrentPlaylist
+                } else {
+                    print("ℹ️ No context in playback (might be a single track)")
+                    return false
+                }
+            } else {
+                print("ℹ️ No active playback session")
+                return false
+            }
+        } catch {
+            print("❌ Failed to check playback context: \(error)")
+            
+            // 特殊处理401权限错误 - 使用本地状态判断
+            if error.localizedDescription.contains("401") || error.localizedDescription.contains("Permissions missing") {
+                print("🔒 401 permission error detected - using local state fallback")
+                let localMatch = isPlaying && currentSpotifyTrack != nil && 
+                                (currentPlaylistURI == playlist.uri || currentPlaylistURI == nil)
+                print("📱 Local fallback result: \(localMatch)")
+                return localMatch
+            }
+            
+            // 其他错误使用标准降级逻辑
+            return isPlaying && currentSpotifyTrack != nil
         }
     }
     
@@ -411,11 +512,30 @@ class AppState: ObservableObject {
         
         Task {
             do {
+                print("🎵 Seeking to position: \(currentTime)s (progress: \(newProgress))")
                 try await service.seek(to: currentTime)
+                print("✅ Seek completed successfully")
+                
+                // Seek成功后，恢复自动进度更新
+                await MainActor.run {
+                    self.isUserSeekingProgress = false
+                }
             } catch {
+                print("❌ Seek failed: \(error)")
                 showError("Seek failed: \(error.localizedDescription)")
+                
+                // 如果seek失败，也恢复自动进度更新
+                await MainActor.run {
+                    self.isUserSeekingProgress = false
+                }
             }
         }
+    }
+    
+    // MARK: - Progress Control Methods
+    func setUserSeekingProgress(_ isSeeking: Bool) {
+        isUserSeekingProgress = isSeeking
+        print("🎵 User seeking progress: \(isSeeking)")
     }
     
     // MARK: - Error Handling

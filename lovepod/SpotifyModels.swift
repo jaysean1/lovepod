@@ -74,8 +74,8 @@ struct SpotifyTrack: Codable, Identifiable {
     let name: String
     let artists: [SpotifyArtist]
     let album: SpotifyAlbum
-    let durationMs: Int
-    let explicit: Bool
+    let durationMs: Int?
+    let explicit: Bool?
     let previewUrl: String?
     let uri: String
     
@@ -97,6 +97,7 @@ struct SpotifyTrack: Codable, Identifiable {
     
     /// 获取时长字符串 (mm:ss)
     var durationString: String {
+        guard let durationMs = durationMs else { return "--:--" }
         let totalSeconds = durationMs / 1000
         let minutes = totalSeconds / 60
         let seconds = totalSeconds % 60
@@ -221,6 +222,60 @@ struct SpotifyPlayerState {
         } else {
             return .stopped
         }
+    }
+}
+
+// MARK: - Playback Context Models (for Web API)
+
+/// Spotify播放上下文模型，用于获取当前播放状态
+struct SpotifyPlaybackContext: Codable {
+    let device: SpotifyDevice?
+    let shuffleState: Bool?
+    let repeatState: String?
+    let timestamp: Int?
+    let context: SpotifyContext?
+    let progressMs: Int?
+    let item: SpotifyTrack?
+    let isPlaying: Bool?
+    
+    enum CodingKeys: String, CodingKey {
+        case device, context, item
+        case shuffleState = "shuffle_state"
+        case repeatState = "repeat_state"
+        case timestamp
+        case progressMs = "progress_ms"
+        case isPlaying = "is_playing"
+    }
+}
+
+/// Spotify设备信息
+struct SpotifyDevice: Codable {
+    let id: String?
+    let isActive: Bool
+    let isPrivateSession: Bool
+    let isRestricted: Bool
+    let name: String
+    let type: String
+    let volumePercent: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, type
+        case isActive = "is_active"
+        case isPrivateSession = "is_private_session"
+        case isRestricted = "is_restricted"
+        case volumePercent = "volume_percent"
+    }
+}
+
+/// Spotify播放上下文信息
+struct SpotifyContext: Codable {
+    let type: String  // "playlist", "album", "artist", etc.
+    let href: String
+    let uri: String
+    
+    /// 检查是否是指定的playlist URI
+    func isPlaylist(withURI playlistURI: String) -> Bool {
+        return type == "playlist" && uri == playlistURI
     }
 }
 

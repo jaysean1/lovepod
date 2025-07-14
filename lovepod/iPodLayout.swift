@@ -102,6 +102,7 @@ struct ClickWheelView: View {
     @EnvironmentObject var appState: AppState
     @State private var lastAngle: Double = 0
     @State private var rotationAccumulator: Double = 0
+    @State private var isWheelBeingRotated: Bool = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -130,9 +131,19 @@ struct ClickWheelView: View {
                     .gesture(
                         DragGesture()
                             .onChanged { value in
+                                if !isWheelBeingRotated {
+                                    isWheelBeingRotated = true
+                                    // 如果在Now Playing界面，设置用户正在控制进度
+                                    if appState.currentPage == .nowPlaying {
+                                        appState.setUserSeekingProgress(true)
+                                    }
+                                    print("🎵 Started wheel rotation gesture")
+                                }
                                 handleWheelRotation(value: value, wheelSize: wheelSize)
                             }
                             .onEnded { _ in
+                                print("🎵 Ended wheel rotation gesture")
+                                isWheelBeingRotated = false
                                 resetRotation()
                             }
                     )
@@ -298,7 +309,22 @@ struct ClickWheelView: View {
     }
     
     private func resetRotation() {
+        // 转盘停止时，同步播放进度到设定位置
+        if appState.currentPage == .nowPlaying {
+            // 转盘停止，同步进度
+            syncPlaybackProgress()
+        }
         rotationAccumulator = 0
+    }
+    
+    private func syncPlaybackProgress() {
+        // 转盘停止后，确保播放进度同步到设定位置
+        print("🎵 Wheel rotation ended, syncing playback progress to: \(appState.playbackProgress)")
+        
+        // 调用AppState的seek方法，将当前UI进度同步到实际播放位置
+        appState.seek(to: appState.playbackProgress)
+        
+        print("✅ Seek command sent to AppState for progress: \(appState.playbackProgress)")
     }
     
     private func handleMenuNavigation(direction: Int) {
@@ -323,9 +349,14 @@ struct ClickWheelView: View {
             
         case .nowPlaying:
             // In now playing, rotation controls scrubbing
-            let progressDelta = Double(direction) * 0.05 // 5% per step
+            let progressDelta = Double(direction) * 0.02 // 2% per step for finer control
             let newProgress = max(0.0, min(1.0, appState.playbackProgress + progressDelta))
-            appState.seek(to: newProgress)
+            
+            // 在滚动时实时更新UI进度，但不立即同步到Spotify
+            appState.playbackProgress = newProgress
+            appState.currentTime = appState.duration * newProgress
+            
+            print("🎵 Wheel rotation: progress updated to \(newProgress) (time: \(appState.currentTime)s)")
             
         default:
             break

@@ -339,6 +339,54 @@ class SpotifyWebAPIManager: NSObject, ObservableObject {
         
         return false
     }
+    
+    // MARK: - Playback State API
+    /// 获取当前播放上下文，用于检查当前正在播放的playlist
+    func getCurrentPlaybackContext() async -> SpotifyPlaybackContext? {
+        guard let token = webAPIToken else {
+            print("❌ No Web API token available")
+            return nil
+        }
+        
+        // 刷新 token 如果需要
+        if !(await refreshTokenIfNeeded()) {
+            print("❌ Token refresh failed")
+            return nil
+        }
+        
+        guard let url = URL(string: "https://api.spotify.com/v1/me/player") else {
+            print("❌ Invalid URL for playback endpoint")
+            return nil
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📡 Playback context response: \(httpResponse.statusCode)")
+                
+                if httpResponse.statusCode == 200 {
+                    let playbackContext = try JSONDecoder().decode(SpotifyPlaybackContext.self, from: data)
+                    print("✅ Successfully fetched playback context")
+                    print("🎵 Current context: \(playbackContext.context?.uri ?? "no context")")
+                    return playbackContext
+                } else if httpResponse.statusCode == 204 {
+                    print("ℹ️ No active playback session")
+                    return nil
+                } else {
+                    let errorString = String(data: data, encoding: .utf8) ?? "Unknown error"
+                    print("❌ Playback context API error: \(httpResponse.statusCode) - \(errorString)")
+                }
+            }
+        } catch {
+            print("❌ Failed to fetch playback context: \(error)")
+        }
+        
+        return nil
+    }
 }
 
 // MARK: - Token Response Model

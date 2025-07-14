@@ -49,6 +49,10 @@ class SpotifyService: NSObject, SpotifyServiceProtocol {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
     
+    // MARK: - Cache Properties
+    private var fetchedTrackIds: Set<String> = []  // 缓存已获取的track ID
+    private var trackInfoCache: [String: SpotifyTrack] = [:]  // 缓存完整的track信息
+    
     // MARK: - Private Properties
     #if canImport(SpotifyiOS)
     private var appRemote: SPTAppRemote?
@@ -534,8 +538,17 @@ extension SpotifyService: SPTAppRemotePlayerStateDelegate {
     }
     
     private func convertTrack(from remoteTrack: SPTAppRemoteTrack) -> SpotifyTrack {
-        return SpotifyTrack(
-            id: remoteTrack.uri.replacingOccurrences(of: "spotify:track:", with: ""),
+        let trackId = remoteTrack.uri.replacingOccurrences(of: "spotify:track:", with: "")
+        
+        // 检查是否已有缓存的完整track信息
+        if let cachedTrack = trackInfoCache[trackId] {
+            print("✅ Using cached track info for: \(cachedTrack.name)")
+            return cachedTrack
+        }
+        
+        // 创建基础track对象
+        let track = SpotifyTrack(
+            id: trackId,
             name: remoteTrack.name,
             artists: [SpotifyArtist(id: "", name: remoteTrack.artist.name, images: nil)],
             album: SpotifyAlbum(
@@ -550,6 +563,67 @@ extension SpotifyService: SPTAppRemotePlayerStateDelegate {
             previewUrl: nil,
             uri: remoteTrack.uri
         )
+        
+        // 仅在未获取过的情况下异步获取完整的track信息
+        if !fetchedTrackIds.contains(trackId) {
+            print("🔄 Fetching full track info for new track: \(track.name)")
+            fetchedTrackIds.insert(trackId)
+            Task {
+                await fetchFullTrackInfo(trackId: trackId)
+            }
+        } else {
+            print("⏭️ Skipping fetch for already processed track: \(track.name)")
+        }
+        
+        return track
+    }
+    
+    private func fetchFullTrackInfo(trackId: String) async {
+        guard let token = accessToken else { return }
+        
+        let urlString = "https://api.spotify.com/v1/tracks/\(trackId)"
+        guard let url = URL(string: urlString) else { return }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📡 Full track info response: \(httpResponse.statusCode)")
+                
+                if httpResponse.statusCode == 200 {
+                    let decoder = JSONDecoder()
+                    // 不使用自动转换策略，因为我们有明确的CodingKeys定义
+                    let fullTrack = try decoder.decode(SpotifyTrack.self, from: data)
+                    
+                    print("✅ Successfully fetched full track info for: \(fullTrack.name)")
+                    print("🖼️ Album image URL: \(fullTrack.albumImageURL ?? "nil")")
+                    
+                    await MainActor.run {
+                        // 缓存完整的track信息
+                        self.trackInfoCache[trackId] = fullTrack
+                        
+                        // 仅在这是当前track时才更新currentTrack
+                        if self.currentTrack?.id == trackId {
+                            print("🔄 Updating current track with full info")
+                            self.currentTrack = fullTrack
+                        } else {
+                            print("💾 Cached track info for future use")
+                        }
+                    }
+                } else {
+                    let errorString = String(data: data, encoding: .utf8) ?? "Unknown error"
+                    print("❌ Full track info API error: \(httpResponse.statusCode) - \(errorString)")
+                }
+            }
+        } catch {
+            print("❌ Failed to fetch full track info: \(error)")
+            if let decodingError = error as? DecodingError {
+                print("❌ Decoding error details: \(decodingError)")
+            }
+        }
     }
 }
 #endif

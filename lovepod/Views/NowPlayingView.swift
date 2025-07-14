@@ -34,55 +34,28 @@ struct NowPlayingView: View {
             Spacer()
             
             // 专辑封面 - 使用 Spotify 数据或模拟数据
-            if let spotifyTrack = appState.currentSpotifyTrack,
-               let albumImageURL = spotifyTrack.albumImageURL {
-                // 显示 Spotify 专辑封面
-                AsyncImage(url: URL(string: albumImageURL)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    // 加载中占位符
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: DesignSystem.Colors.highlightBackground))
-                        .frame(
-                            width: DesignSystem.Components.AlbumArt.size,
-                            height: DesignSystem.Components.AlbumArt.size
-                        )
-                        .background(
-                            RoundedRectangle(cornerRadius: DesignSystem.Components.AlbumArt.cornerRadius)
-                                .fill(DesignSystem.Colors.background)
-                        )
-                }
+            if let spotifyTrack = appState.currentSpotifyTrack {
+                // 显示 Spotify 专辑封面，仅在专辑图片URL变化时重新加载
+                AlbumArtworkView(
+                    albumImageURL: spotifyTrack.albumImageURL,
+                    trackId: spotifyTrack.id
+                )
                 .frame(
                     width: DesignSystem.Components.AlbumArt.size,
                     height: DesignSystem.Components.AlbumArt.size
                 )
                 .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Components.AlbumArt.cornerRadius))
                 .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
-                
+                .id(spotifyTrack.albumImageURL ?? "no-image") // 仅在图片URL变化时重新创建
+                    
             } else {
                 // 默认占位符封面
-                RoundedRectangle(cornerRadius: DesignSystem.Components.AlbumArt.cornerRadius)
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                DesignSystem.Colors.highlightBackground.opacity(0.8),
-                                DesignSystem.Colors.highlightBackground.opacity(0.4)
-                            ]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                AlbumArtworkView(albumImageURL: nil, trackId: nil)
                     .frame(
                         width: DesignSystem.Components.AlbumArt.size,
                         height: DesignSystem.Components.AlbumArt.size
                     )
-                    .overlay(
-                        Image(systemName: DesignSystem.Icons.music)
-                            .font(.system(size: 60, weight: .light))
-                            .foregroundColor(DesignSystem.Colors.background)
-                    )
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Components.AlbumArt.cornerRadius))
                     .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
             }
             
@@ -152,10 +125,11 @@ struct NowPlayingView: View {
     // MARK: - Progress Section
     private var progressSection: some View {
         VStack(spacing: DesignSystem.Spacing.xs) {
-            // 进度条
+            // 进度条（带有预览功能）
             ProgressBarView(
                 progress: appState.playbackProgress,
-                duration: appState.duration
+                duration: appState.duration,
+                isUserSeeking: appState.isUserSeekingProgress
             )
             .padding(.horizontal, DesignSystem.Components.Scrubber.padding)
             
@@ -167,11 +141,20 @@ struct NowPlayingView: View {
                 
                 Spacer()
                 
+                // 如果用户正在拖动，显示预览时间
+                if appState.isUserSeekingProgress {
+                    Text("→ \(formatTime(appState.currentTime))")
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(DesignSystem.Colors.highlightBackground)
+                        .transition(.opacity)
+                }
+                
                 Text(formatTime(appState.duration))
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundColor(DesignSystem.Colors.text.opacity(0.7))
             }
             .padding(.horizontal, DesignSystem.Components.Scrubber.padding)
+            .animation(.easeInOut(duration: 0.2), value: appState.isUserSeekingProgress)
         }
     }
     
@@ -209,10 +192,118 @@ struct NowPlayingView: View {
     }
 }
 
+// MARK: - Album Artwork View
+struct AlbumArtworkView: View {
+    let albumImageURL: String?
+    let trackId: String?
+    @State private var hasFailedToLoad: Bool = false
+    @State private var retryCount: Int = 0
+    @State private var lastLoadedURL: String? = nil
+    private let maxRetries: Int = 2
+    
+    var body: some View {
+        Group {
+            if let albumImageURL = albumImageURL,
+               let url = URL(string: albumImageURL) {
+                // 显示专辑封面，带有重试机制
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .transition(.opacity)
+                            .onAppear {
+                                print("✅ Successfully loaded album artwork from: \(albumImageURL)")
+                                hasFailedToLoad = false
+                                retryCount = 0
+                                lastLoadedURL = albumImageURL
+                            }
+                    case .failure(let error):
+                        // 加载失败时的占位符，支持重试
+                        albumArtPlaceholder
+                            .overlay(
+                                VStack(spacing: 8) {
+                                    Image(systemName: hasFailedToLoad ? "photo" : "exclamationmark.triangle")
+                                        .font(.system(size: 30, weight: .light))
+                                        .foregroundColor(DesignSystem.Colors.text.opacity(0.5))
+                                    
+                                    if retryCount < maxRetries {
+                                        Text("Tap to retry")
+                                            .font(.caption2)
+                                            .foregroundColor(DesignSystem.Colors.text.opacity(0.5))
+                                    }
+                                }
+                            )
+                            .onTapGesture {
+                                // 点击重试加载
+                                if retryCount < maxRetries {
+                                    retryCount += 1
+                                    print("🔄 Retrying album artwork load (attempt \(retryCount))")
+                                    // 强制刷新AsyncImage
+                                }
+                            }
+                            .onAppear {
+                                print("❌ Failed to load album artwork: \(error.localizedDescription)")
+                                print("❌ URL: \(albumImageURL)")
+                                hasFailedToLoad = true
+                            }
+                    case .empty:
+                        // 加载中占位符
+                        albumArtPlaceholder
+                            .overlay(
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: DesignSystem.Colors.highlightBackground))
+                            )
+                            .onAppear {
+                                // 仅在URL真正变化时记录加载
+                                if lastLoadedURL != albumImageURL {
+                                    print("🔄 Loading new album artwork from: \(albumImageURL)")
+                                    lastLoadedURL = albumImageURL
+                                } else {
+                                    print("⏭️ Same URL, skipping load log: \(albumImageURL)")
+                                }
+                            }
+                    @unknown default:
+                        albumArtPlaceholder
+                    }
+                }
+                .id("\(albumImageURL)-\(retryCount)") // 使用retryCount强制重新加载
+            } else {
+                // 无图片URL时的默认占位符
+                albumArtPlaceholder
+                    .onAppear {
+                        print("ℹ️ No album artwork URL provided")
+                    }
+            }
+        }
+    }
+    
+    private var albumArtPlaceholder: some View {
+        RoundedRectangle(cornerRadius: DesignSystem.Components.AlbumArt.cornerRadius)
+            .fill(
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        DesignSystem.Colors.highlightBackground.opacity(0.8),
+                        DesignSystem.Colors.highlightBackground.opacity(0.4)
+                    ]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .overlay(
+                Image(systemName: DesignSystem.Icons.music)
+                    .font(.system(size: 60, weight: .light))
+                    .foregroundColor(DesignSystem.Colors.background)
+            )
+    }
+}
+
 // MARK: - Progress Bar Component
 struct ProgressBarView: View {
     let progress: Double
     let duration: TimeInterval
+    let isUserSeeking: Bool
     
     var body: some View {
         GeometryReader { geometry in
@@ -224,15 +315,28 @@ struct ProgressBarView: View {
                 
                 // 进度填充
                 RoundedRectangle(cornerRadius: DesignSystem.Components.Scrubber.trackHeight / 2)
-                    .fill(DesignSystem.Colors.highlightBackground)
+                    .fill(isUserSeeking ? 
+                          DesignSystem.Colors.highlightBackground.opacity(0.8) : 
+                          DesignSystem.Colors.highlightBackground)
                     .frame(
                         width: geometry.size.width * CGFloat(progress),
                         height: DesignSystem.Components.Scrubber.trackHeight
                     )
-                    .animation(.linear(duration: 0.1), value: progress)
+                    .animation(.linear(duration: isUserSeeking ? 0.05 : 0.1), value: progress)
+                
+                // 拖动时的预览指示器
+                if isUserSeeking {
+                    Circle()
+                        .fill(DesignSystem.Colors.highlightBackground)
+                        .frame(width: 12, height: 12)
+                        .offset(x: geometry.size.width * CGFloat(progress) - 6)
+                        .shadow(color: Color.black.opacity(0.3), radius: 2, x: 0, y: 1)
+                        .transition(.scale.combined(with: .opacity))
+                }
             }
         }
         .frame(height: DesignSystem.Components.Scrubber.trackHeight)
+        .animation(.easeInOut(duration: 0.2), value: isUserSeeking)
     }
 }
 

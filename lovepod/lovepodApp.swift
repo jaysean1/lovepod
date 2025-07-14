@@ -58,10 +58,12 @@ struct lovepodApp: App {
         // 关键：建立服务与 AppState 的连接
         appState.setSpotifyService(spotifyService)
         appState.setPlaylistService(playlistService)
+        appState.setWebAPIManager(webAPIManager)
         
         print("✅ AppState connections established")
         print("🔗 SpotifyService connected to AppState: \(appState.instanceID)")
         print("🔗 PlaylistService connected to AppState: \(appState.instanceID)")
+        print("🔗 WebAPIManager connected to AppState: \(appState.instanceID)")
     }
     
     // MARK: - URL Handling
