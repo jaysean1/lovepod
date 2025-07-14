@@ -163,6 +163,8 @@ struct ClickWheelView: View {
             }
             .font(.caption.bold())
             .foregroundColor(DesignSystem.Colors.text)
+            .padding(20)
+            .contentShape(Rectangle())
             .offset(y: -(wheelSize / 2 - 20))
             
             // 左按钮 - 距离转盘边缘内侧20pt
@@ -171,6 +173,8 @@ struct ClickWheelView: View {
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(DesignSystem.Colors.text)
             }
+            .padding(20)
+            .contentShape(Rectangle())
             .offset(x: -(wheelSize / 2 - 20))
             
             // 右按钮 - 距离转盘边缘内侧20pt
@@ -179,6 +183,8 @@ struct ClickWheelView: View {
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(DesignSystem.Colors.text)
             }
+            .padding(20)
+            .contentShape(Rectangle())
             .offset(x: (wheelSize / 2 - 20))
             
             // PLAY/PAUSE 按钮 (底部) - 距离转盘边缘内侧20pt
@@ -187,6 +193,8 @@ struct ClickWheelView: View {
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(DesignSystem.Colors.text)
             }
+            .padding(20)
+            .contentShape(Rectangle())
             .offset(y: (wheelSize / 2 - 20))
         }
     }
@@ -199,12 +207,13 @@ struct ClickWheelView: View {
         case .home:
             appState.selectHomeMenuItem(appState.selectedHomeMenuItem)
         case .playlist:
-            // 特殊处理：如果未授权，触发授权；否则选择播放列表
+            // 特殊处理：如果未授权，触发授权；如果没有播放列表，加载播放列表；否则选择播放列表
             if !appState.isSpotifyAuthenticated {
                 appState.authenticateSpotify()
             } else if appState.spotifyPlaylists.isEmpty {
                 appState.loadSpotifyPlaylists()
-            } else {
+            } else if appState.selectedPlaylistIndex < appState.spotifyPlaylists.count {
+                // 确保索引有效后选择播放列表
                 appState.selectPlaylist(appState.selectedPlaylistIndex)
             }
         case .settings:

@@ -23,6 +23,9 @@ struct NowPlayingView: View {
                 .frame(height: 60)
         }
         .background(DesignSystem.Colors.background)
+        .onReceive(Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()) { _ in
+            updatePlaybackProgress()
+        }
     }
     
     // MARK: - Album Art Section
@@ -173,6 +176,30 @@ struct NowPlayingView: View {
     }
     
     // MARK: - Helper Methods
+    private func updatePlaybackProgress() {
+        // 只在播放状态下更新进度
+        guard appState.isPlaying else { return }
+        
+        // 如果有 Spotify 服务且已连接，从服务获取实时进度
+        if appState.isSpotifyConnected {
+            // Spotify 服务应该通过 PlayerState 自动更新进度
+            // 这里不需要手动更新，因为 AppState 已经通过 service.$currentPlayerState 监听
+            return
+        }
+        
+        // 模拟模式下的手动进度更新
+        if appState.duration > 0 {
+            let newCurrentTime = min(appState.currentTime + 1.0, appState.duration)
+            appState.currentTime = newCurrentTime
+            appState.playbackProgress = newCurrentTime / appState.duration
+            
+            // 如果播放完毕，停止播放
+            if newCurrentTime >= appState.duration {
+                appState.isPlaying = false
+            }
+        }
+    }
+    
     private func formatTime(_ timeInterval: TimeInterval) -> String {
         let minutes = Int(timeInterval) / 60
         let seconds = Int(timeInterval) % 60

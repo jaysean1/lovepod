@@ -114,8 +114,12 @@ struct PlaylistView: View {
                     .padding(.horizontal, geometry.size.width / 2 - 75) // Center the selected item
                 }
                 .onChange(of: appState.selectedPlaylistIndex) { _, newIndex in
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        proxy.scrollTo(newIndex, anchor: .center)
+                    // 确保索引在有效范围内
+                    let validIndex = max(0, min(newIndex, appState.spotifyPlaylists.count - 1))
+                    if validIndex < appState.spotifyPlaylists.count {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            proxy.scrollTo(validIndex, anchor: .center)
+                        }
                     }
                 }
             }
@@ -307,13 +311,30 @@ struct PlaylistView: View {
                     print("🎵 PlaylistInfoView: Displaying \(selectedPlaylist.name)")
                 }
             } else {
-                // 无数据时的占位符
-                Text("Loading playlist...")
-                    .font(DesignSystem.Typography.nowPlayingArtist)
-                    .foregroundColor(DesignSystem.Colors.text.opacity(0.5))
-                    .onAppear {
-                        print("🎵 PlaylistInfoView: No Spotify playlists available (count: \(appState.spotifyPlaylists.count), selectedIndex: \(appState.selectedPlaylistIndex))")
-                    }
+                // 只在真正无数据或加载中时显示占位符
+                if playlistService.isLoading {
+                    Text("Loading playlist...")
+                        .font(DesignSystem.Typography.nowPlayingArtist)
+                        .foregroundColor(DesignSystem.Colors.text.opacity(0.5))
+                        .onAppear {
+                            print("🎵 PlaylistInfoView: Loading playlists...")
+                        }
+                } else if appState.spotifyPlaylists.isEmpty {
+                    Text("No playlists available")
+                        .font(DesignSystem.Typography.nowPlayingArtist)
+                        .foregroundColor(DesignSystem.Colors.text.opacity(0.5))
+                        .onAppear {
+                            print("🎵 PlaylistInfoView: No Spotify playlists available")
+                        }
+                } else {
+                    // 避免显示 loading 文本
+                    Text("")
+                        .font(DesignSystem.Typography.nowPlayingArtist)
+                        .foregroundColor(DesignSystem.Colors.text.opacity(0.5))
+                        .onAppear {
+                            print("🎵 PlaylistInfoView: Index out of bounds (count: \(appState.spotifyPlaylists.count), selectedIndex: \(appState.selectedPlaylistIndex))")
+                        }
+                }
             }
         }
         .frame(maxWidth: .infinity)
