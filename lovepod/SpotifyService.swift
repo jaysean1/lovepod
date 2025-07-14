@@ -119,7 +119,16 @@ class SpotifyService: NSObject, SpotifyServiceProtocol {
             return
         }
         print("🎵 Starting Spotify authorization...")
-        appRemote.authorizeAndPlayURI("")
+        // 使用一个默认的 URI 来触发授权，Demo 项目中使用的是 spotify:album:xxx
+        let defaultURI = "spotify:album:1htHMnxonxmyHdKE2uDFMR"
+        appRemote.authorizeAndPlayURI(defaultURI) { [weak self] success in
+            if !success {
+                print("❌ Authorization failed, Spotify app might not be installed")
+                self?.setError("Authorization failed: Please install the Spotify app")
+            } else {
+                print("✅ Authorization initiated successfully")
+            }
+        }
         #else
         print("🧪 Mock: Authorizing...")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
@@ -143,6 +152,7 @@ class SpotifyService: NSObject, SpotifyServiceProtocol {
         isConnected = true
         #endif
     }
+    
     
     func disconnect() {
         #if canImport(SpotifyiOS)

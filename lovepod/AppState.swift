@@ -121,6 +121,7 @@ class AppState: ObservableObject {
     @Published var isSpotifyAuthenticated: Bool = false
     @Published var isSpotifyConnected: Bool = false
     @Published var currentPlaylistURI: String? = nil  // 跟踪当前播放的playlist URI
+    @Published var showReconnectPrompt: Bool = false  // 显示重连提示
     
     // MARK: - Playlist State (backward compatibility)
     @Published var playlists: [PlaylistModel] = PlaylistModel.mockData
@@ -148,7 +149,19 @@ class AppState: ObservableObject {
         
         service.$isConnected
             .receive(on: DispatchQueue.main)
-            .assign(to: &$isSpotifyConnected)
+            .sink { [weak self] isConnected in
+                self?.isSpotifyConnected = isConnected
+                // 当连接断开时，如果之前是已连接状态，显示重连提示
+                if !isConnected && self?.isSpotifyAuthenticated == true {
+                    self?.showReconnectPrompt = true
+                    print("🔌 Spotify disconnected - showing reconnect prompt")
+                } else if isConnected {
+                    // 连接成功时隐藏重连提示
+                    self?.showReconnectPrompt = false
+                    print("✅ Spotify connected - hiding reconnect prompt")
+                }
+            }
+            .store(in: &cancellables)
         
         service.$currentTrack
             .receive(on: DispatchQueue.main)
@@ -299,6 +312,13 @@ class AppState: ObservableObject {
         
         let playlist = spotifyPlaylists[index]
         
+        // 检查连接状态
+        if !isSpotifyConnected {
+            print("🔌 Spotify not connected, showing reconnect prompt")
+            showReconnectPrompt = true
+            return
+        }
+        
         // 异步检查是否是当前正在播放的playlist
         Task {
             let isCurrentlyPlaying = await isCurrentlyPlayingPlaylist(playlist: playlist)
@@ -330,7 +350,12 @@ class AppState: ObservableObject {
                 }
             } catch {
                 await MainActor.run {
-                    self.showError("Failed to play playlist: \(error.localizedDescription)")
+                    // 检查是否是连接相关错误
+                    if error.localizedDescription.contains("not connected") || error.localizedDescription.contains("connection") {
+                        self.showReconnectPrompt = true
+                    } else {
+                        self.showError("Failed to play playlist: \(error.localizedDescription)")
+                    }
                 }
             }
         }
@@ -358,45 +383,29 @@ class AppState: ObservableObject {
             return isPlaying && currentSpotifyTrack != nil && currentPlaylistURI == playlist.uri
         }
         
-        do {
-            if let playbackContext = await webAPIManager.getCurrentPlaybackContext() {
-                if let context = playbackContext.context {
-                    let isCurrentPlaylist = context.isPlaylist(withURI: playlist.uri)
-                    print("✅ Found active playback context via API")
-                    print("🎵 Current context: \(context.uri)")
-                    print("🎯 Target playlist: \(playlist.uri)")
-                    print("📊 Is same playlist (API): \(isCurrentPlaylist)")
-                    
-                    // 更新本地状态缓存
-                    if isCurrentPlaylist {
-                        await MainActor.run {
-                            self.currentPlaylistURI = playlist.uri
-                        }
+        if let playbackContext = await webAPIManager.getCurrentPlaybackContext() {
+            if let context = playbackContext.context {
+                let isCurrentPlaylist = context.isPlaylist(withURI: playlist.uri)
+                print("✅ Found active playback context via API")
+                print("🎵 Current context: \(context.uri)")
+                print("🎯 Target playlist: \(playlist.uri)")
+                print("📊 Is same playlist (API): \(isCurrentPlaylist)")
+                
+                // 更新本地状态缓存
+                if isCurrentPlaylist {
+                    await MainActor.run {
+                        self.currentPlaylistURI = playlist.uri
                     }
-                    
-                    return isCurrentPlaylist
-                } else {
-                    print("ℹ️ No context in playback (might be a single track)")
-                    return false
                 }
+                
+                return isCurrentPlaylist
             } else {
-                print("ℹ️ No active playback session")
+                print("ℹ️ No context in playback (might be a single track)")
                 return false
             }
-        } catch {
-            print("❌ Failed to check playback context: \(error)")
-            
-            // 特殊处理401权限错误 - 使用本地状态判断
-            if error.localizedDescription.contains("401") || error.localizedDescription.contains("Permissions missing") {
-                print("🔒 401 permission error detected - using local state fallback")
-                let localMatch = isPlaying && currentSpotifyTrack != nil && 
-                                (currentPlaylistURI == playlist.uri || currentPlaylistURI == nil)
-                print("📱 Local fallback result: \(localMatch)")
-                return localMatch
-            }
-            
-            // 其他错误使用标准降级逻辑
-            return isPlaying && currentSpotifyTrack != nil
+        } else {
+            print("ℹ️ No active playback session")
+            return false
         }
     }
     
@@ -410,6 +419,16 @@ class AppState: ObservableObject {
         }
         
         service.authorize()
+    }
+    
+    func reconnectSpotify() {
+        print("🔄 Reconnecting to Spotify using same flow as first connection...")
+        
+        // 隐藏重连提示
+        showReconnectPrompt = false
+        
+        // 直接使用首次连接的逻辑
+        authenticateSpotify()
     }
     
     func loadSpotifyPlaylists() {
@@ -435,6 +454,13 @@ class AppState: ObservableObject {
             return
         }
         
+        // 检查连接状态
+        if !isSpotifyConnected {
+            print("🔌 Spotify not connected, showing reconnect prompt")
+            showReconnectPrompt = true
+            return
+        }
+        
         print("🎮 Using Spotify service for playback control")
         
         Task {
@@ -450,7 +476,12 @@ class AppState: ObservableObject {
                 }
             } catch {
                 print("❌ Playback control failed: \(error)")
-                showError("Playback control failed: \(error.localizedDescription)")
+                // 检查是否是连接相关错误
+                if error.localizedDescription.contains("not connected") || error.localizedDescription.contains("connection") {
+                    showReconnectPrompt = true
+                } else {
+                    showError("Playback control failed: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -466,6 +497,13 @@ class AppState: ObservableObject {
             return
         }
         
+        // 检查连接状态
+        if !isSpotifyConnected {
+            print("🔌 Spotify not connected, showing reconnect prompt")
+            showReconnectPrompt = true
+            return
+        }
+        
         print("🎮 Using Spotify service to skip to next")
         
         Task {
@@ -474,7 +512,12 @@ class AppState: ObservableObject {
                 print("🎮 Skip to next command sent successfully")
             } catch {
                 print("❌ Skip to next failed: \(error)")
-                showError("Skip to next failed: \(error.localizedDescription)")
+                // 检查是否是连接相关错误
+                if error.localizedDescription.contains("not connected") || error.localizedDescription.contains("connection") {
+                    showReconnectPrompt = true
+                } else {
+                    showError("Skip to next failed: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -490,6 +533,13 @@ class AppState: ObservableObject {
             return
         }
         
+        // 检查连接状态
+        if !isSpotifyConnected {
+            print("🔌 Spotify not connected, showing reconnect prompt")
+            showReconnectPrompt = true
+            return
+        }
+        
         print("🎮 Using Spotify service to skip to previous")
         
         Task {
@@ -498,7 +548,12 @@ class AppState: ObservableObject {
                 print("🎮 Skip to previous command sent successfully")
             } catch {
                 print("❌ Skip to previous failed: \(error)")
-                showError("Skip to previous failed: \(error.localizedDescription)")
+                // 检查是否是连接相关错误
+                if error.localizedDescription.contains("not connected") || error.localizedDescription.contains("connection") {
+                    showReconnectPrompt = true
+                } else {
+                    showError("Skip to previous failed: \(error.localizedDescription)")
+                }
             }
         }
     }

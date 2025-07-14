@@ -27,6 +27,11 @@ struct iPodLayout<Content: View>: View {
         }
         .environmentObject(appState)
         .background(DesignSystem.Colors.background)
+        .overlay(
+            // 底部重连提示
+            reconnectPromptOverlay,
+            alignment: .bottom
+        )
         .onAppear {
             // 连接 Spotify 服务到 AppState
             appState.setSpotifyService(spotifyService)
@@ -53,6 +58,44 @@ struct iPodLayout<Content: View>: View {
     private var controlArea: some View {
         ClickWheelView()
             .padding(.all, DesignSystem.Spacing.l)
+    }
+    
+    // MARK: - Reconnect Prompt Overlay
+    private var reconnectPromptOverlay: some View {
+        Group {
+            if appState.showReconnectPrompt {
+                VStack {
+                    Spacer()
+                    
+                    // 重连提示条
+                    Button(action: {
+                        HapticManager.shared.buttonTap()
+                        appState.reconnectSpotify()
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "wifi.exclamationmark")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                            
+                            Text("Spotify disconnected - Tap to reconnect")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.red.opacity(0.9))
+                        )
+                        .shadow(color: Color.black.opacity(0.3), radius: 4, x: 0, y: 2)
+                    }
+                    .padding(.horizontal, DesignSystem.Spacing.m)
+                    .padding(.bottom, DesignSystem.Spacing.m)
+                }
+                .animation(.easeInOut(duration: 0.3), value: appState.showReconnectPrompt)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
     }
 }
 
