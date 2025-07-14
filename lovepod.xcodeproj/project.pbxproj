@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9C67B7202E234F1D00ABFFB2 /* SpotifyiOS.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C67B71F2E234F1D00ABFFB2 /* SpotifyiOS.xcframework */; };
+		9C67B7212E234F1D00ABFFB2 /* SpotifyiOS.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9C67B71F2E234F1D00ABFFB2 /* SpotifyiOS.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		9C67B6792E1F5A5100ABFFB2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -23,15 +28,43 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		9C67B7222E234F1D00ABFFB2 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				9C67B7212E234F1D00ABFFB2 /* SpotifyiOS.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		9C67B66B2E1F5A4F00ABFFB2 /* lovepod.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lovepod.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C67B6782E1F5A5100ABFFB2 /* lovepodTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lovepodTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C67B6822E1F5A5100ABFFB2 /* lovepodUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = lovepodUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9C67B71F2E234F1D00ABFFB2 /* SpotifyiOS.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:2FNC3A47ZF:Spotify"; lastKnownFileType = wrapper.xcframework; name = SpotifyiOS.xcframework; path = "Frameworks/ios-sdk-3.0.0/SpotifyiOS.xcframework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9C67B7242E23503900ABFFB2 /* Exceptions for "lovepod" folder in "lovepod" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9C67B66A2E1F5A4F00ABFFB2 /* lovepod */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9C67B66D2E1F5A4F00ABFFB2 /* lovepod */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9C67B7242E23503900ABFFB2 /* Exceptions for "lovepod" folder in "lovepod" target */,
+			);
 			path = lovepod;
 			sourceTree = "<group>";
 		};
@@ -52,6 +85,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9C67B7202E234F1D00ABFFB2 /* SpotifyiOS.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +112,7 @@
 				9C67B66D2E1F5A4F00ABFFB2 /* lovepod */,
 				9C67B67B2E1F5A5100ABFFB2 /* lovepodTests */,
 				9C67B6852E1F5A5100ABFFB2 /* lovepodUITests */,
+				9C67B71E2E234F1C00ABFFB2 /* Frameworks */,
 				9C67B66C2E1F5A4F00ABFFB2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -92,6 +127,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		9C67B71E2E234F1C00ABFFB2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				9C67B71F2E234F1D00ABFFB2 /* SpotifyiOS.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -102,6 +145,7 @@
 				9C67B6672E1F5A4F00ABFFB2 /* Sources */,
 				9C67B6682E1F5A4F00ABFFB2 /* Frameworks */,
 				9C67B6692E1F5A4F00ABFFB2 /* Resources */,
+				9C67B7222E234F1D00ABFFB2 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -395,8 +439,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q2J262Z76B;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = lovepod/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -407,9 +455,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = "mianmaokushaoye-qq.com.lovepod";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "lovepod/lovepod-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -422,8 +472,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q2J262Z76B;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = lovepod/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -434,9 +488,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = "mianmaokushaoye-qq.com.lovepod";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "lovepod/lovepod-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
