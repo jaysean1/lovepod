@@ -124,7 +124,7 @@ class AppState: ObservableObject {
     @Published var playlists: [PlaylistModel] = PlaylistModel.mockData
     
     // MARK: - Spotify Services
-    private var spotifyService: SpotifyService? = nil
+    private(set) var spotifyService: SpotifyService? = nil
     private var playlistService: SpotifyPlaylistService? = nil
     
     // MARK: - Theme State
@@ -244,13 +244,27 @@ class AppState: ObservableObject {
     
     // MARK: - Playlist Methods
     func selectPlaylist(_ index: Int) {
-        selectedPlaylistIndex = index
+        // 实现无边界循环选择逻辑
+        let playlistCount = !spotifyPlaylists.isEmpty ? spotifyPlaylists.count : playlists.count
+        guard playlistCount > 0 else { return }
+        
+        // 计算有效的索引（保持在边界内）
+        let validIndex: Int
+        if index >= playlistCount {
+            validIndex = playlistCount - 1  // 保持在最后一个
+        } else if index < 0 {
+            validIndex = 0  // 保持在第一个
+        } else {
+            validIndex = index
+        }
+        
+        selectedPlaylistIndex = validIndex
         
         // 根据是否有 Spotify 播放列表来决定播放逻辑
-        if !spotifyPlaylists.isEmpty && index < spotifyPlaylists.count {
-            startPlayingSpotifyPlaylist(at: index)
-        } else if index < playlists.count {
-            startPlayingPlaylist(at: index)
+        if !spotifyPlaylists.isEmpty && validIndex < spotifyPlaylists.count {
+            startPlayingSpotifyPlaylist(at: validIndex)
+        } else if validIndex < playlists.count {
+            startPlayingPlaylist(at: validIndex)
         }
     }
     

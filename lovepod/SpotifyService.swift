@@ -350,7 +350,7 @@ class SpotifyService: NSObject, SpotifyServiceProtocol {
     }
     
     func seek(to position: TimeInterval) async throws {
-        #if canImport(SpotifyiOS)
+#if canImport(SpotifyiOS)
         guard let appRemote = appRemote, appRemote.isConnected else {
             throw SpotifyError.notAuthenticated
         }
@@ -365,11 +365,40 @@ class SpotifyService: NSObject, SpotifyServiceProtocol {
                 }
             }
         }
-        #else
+#else
         print("🧪 Mock: Seeked to \(position)s")
-        #endif
+#endif
     }
     
+    func refreshCurrentPlaybackPosition() async {
+#if canImport(SpotifyiOS)
+        guard let appRemote = appRemote, appRemote.isConnected else {
+            return
+        }
+        
+        appRemote.playerAPI?.getPlayerState { [weak self] playerState, error in
+            guard let self = self,
+                  let playerState = playerState as? SPTAppRemotePlayerState,
+                  error == nil else {
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self.currentTrack = self.convertTrack(from: playerState.track)
+                self.currentPlayerState = SpotifyPlayerState(
+                    track: self.currentTrack,
+                    isPaused: playerState.isPaused,
+                    playbackPosition: TimeInterval(playerState.playbackPosition) / 1000.0,
+                    playbackSpeed: playerState.playbackSpeed,
+                    playbackRestrictions: [:]
+                )
+            }
+        }
+#else
+        // 模拟模式下不需要刷新
+        print("🧪 Mock: Refreshing playback position")
+#endif
+    }    
     // MARK: - Token Validation
     private func validateTokenScopes() async {
         guard let token = accessToken else {

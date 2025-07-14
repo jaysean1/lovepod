@@ -114,9 +114,30 @@ struct PlaylistView: View {
                     .padding(.horizontal, geometry.size.width / 2 - 75) // Center the selected item
                 }
                 .onChange(of: appState.selectedPlaylistIndex) { _, newIndex in
-                    // 确保索引在有效范围内
-                    let validIndex = max(0, min(newIndex, appState.spotifyPlaylists.count - 1))
-                    if validIndex < appState.spotifyPlaylists.count {
+                    // 实现无边界循环滚动逻辑
+                    let playlistCount = appState.spotifyPlaylists.count
+                    guard playlistCount > 0 else { return }
+                    
+                    // 计算有效的索引（保持在边界内）
+                    let validIndex: Int
+                    if newIndex >= playlistCount {
+                        validIndex = playlistCount - 1  // 保持在最后一个
+                    } else if newIndex < 0 {
+                        validIndex = 0  // 保持在第一个
+                    } else {
+                        validIndex = newIndex
+                    }
+                    
+                    // 只有在索引变化时才滚动
+                    if validIndex != appState.selectedPlaylistIndex {
+                        // 更新选中索引
+                        DispatchQueue.main.async {
+                            appState.selectedPlaylistIndex = validIndex
+                        }
+                    }
+                    
+                    // 滚动到选中位置
+                    if validIndex < playlistCount {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             proxy.scrollTo(validIndex, anchor: .center)
                         }

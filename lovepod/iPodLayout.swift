@@ -317,7 +317,7 @@ struct ClickWheelView: View {
             
         case .playlist:
             let currentIndex = appState.selectedPlaylistIndex
-            let maxIndex = appState.playlists.count - 1
+            let maxIndex = !appState.spotifyPlaylists.isEmpty ? appState.spotifyPlaylists.count - 1 : appState.playlists.count - 1
             let newIndex = max(0, min(maxIndex, currentIndex + direction))
             appState.selectedPlaylistIndex = newIndex
             

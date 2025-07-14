@@ -23,7 +23,7 @@ struct NowPlayingView: View {
                 .frame(height: 60)
         }
         .background(DesignSystem.Colors.background)
-        .onReceive(Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()) { _ in
+        .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { _ in
             updatePlaybackProgress()
         }
     }
@@ -180,10 +180,12 @@ struct NowPlayingView: View {
         // 只在播放状态下更新进度
         guard appState.isPlaying else { return }
         
-        // 如果有 Spotify 服务且已连接，从服务获取实时进度
+        // 如果有 Spotify 服务且已连接，主动获取实时进度
         if appState.isSpotifyConnected {
-            // Spotify 服务应该通过 PlayerState 自动更新进度
-            // 这里不需要手动更新，因为 AppState 已经通过 service.$currentPlayerState 监听
+            // 主动查询当前播放位置，确保实时更新
+            Task {
+                await appState.spotifyService?.refreshCurrentPlaybackPosition()
+            }
             return
         }
         

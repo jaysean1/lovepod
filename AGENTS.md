@@ -54,6 +54,28 @@ As this is a standard Xcode project, all development, building, and testing is d
 - **Run/Build**: Use the "Product" -> "Run" (or `Cmd+R`) and "Product" -> "Build" (or `Cmd+B`) menus in Xcode.
 - **Test**: Use the "Product" -> "Test" (or `Cmd+U`) menu in Xcode to run both unit and UI tests.
 
+### Build & Test Process (Command Line)
+After completing code modifications, use these commands to verify the build:
+
+```bash
+# Build the project for iOS Simulator
+xcodebuild -project lovepod.xcodeproj -scheme lovepod -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15' build -quiet
+
+# Run unit tests
+xcodebuild -project lovepod.xcodeproj -scheme lovepod -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15' test -quiet
+
+# Build for physical device (requires connected device)
+xcodebuild -project lovepod.xcodeproj -scheme lovepod -configuration Debug -destination 'platform=iOS,name=Your Device Name' build
+```
+
+### Post-Modification Checklist
+After making code changes:
+1. **Build verification** - Run the build command above
+2. **Test execution** - Run unit and UI tests
+3. **Simulator testing** - Test on iOS Simulator for basic functionality
+4. **Device testing** - Test on physical device for Spotify SDK features
+5. **Feature verification** - Verify the specific features you modified work as expected
+
 ### Build & Testing
 - **Device**: A physical iOS device with the Spotify app installed is required for testing, as the Spotify iOS SDK does not work on the simulator.
 - **Dependencies**: The SpotifyiOS.framework needs to be included in the project.
