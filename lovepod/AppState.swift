@@ -94,11 +94,14 @@ class AppState: ObservableObject {
     // MARK: - Navigation State
     @Published var currentPage: NavigationPage = .home
     @Published var navigationStack: [NavigationPage] = [.home]
+    @Published var lastVisitedPlaylistPage: Bool = false  // 追踪是否曾访问过 playlist 页面
     
     // MARK: - Menu Selection State
     @Published var selectedHomeMenuItem: Int = 0
     @Published var selectedSettingsMenuItem: Int = 0
     @Published var selectedPlaylistIndex: Int = 0
+    @Published var lastSelectedPlaylistIndex: Int = 0  // 记住用户最后选中的播放列表索引
+    @Published var shouldScrollToPlaylist: Bool = false  // 触发滚动到指定播放列表的标志
     
     // MARK: - UI State
     @Published var isLoading: Bool = false
@@ -133,6 +136,79 @@ class AppState: ObservableObject {
     
     // MARK: - Theme State
     @Published var selectedTheme: String = "Classic"
+    
+    // MARK: - Smart Selection Logic
+    /// 计算智能默认选中的播放列表索引
+    /// 优先级：当前播放列表 > 用户最后选中 > 第一个播放列表 (0)
+    var preferredPlaylistIndex: Int {
+        guard !spotifyPlaylists.isEmpty else { return 0 }
+        
+        // 判断导航场景
+        let isReturningFromNowPlaying = navigationStack.contains(.nowPlaying)
+        let isFirstTimeVisit = !lastVisitedPlaylistPage
+        
+        // 1. 优先级最高：从 Now Playing 返回时，选择当前播放的播放列表
+        if isReturningFromNowPlaying,
+           let currentPlaylistURI = currentPlaylistURI,
+           let currentPlayingIndex = findPlaylistIndex(by: currentPlaylistURI) {
+            print("🎯 Smart selection (Now Playing return): Found currently playing playlist at index \(currentPlayingIndex)")
+            return currentPlayingIndex
+        }
+        
+        // 2. 高优先级：当前有播放内容且不是首次访问时，选择当前播放的播放列表
+        if !isFirstTimeVisit,
+           let currentPlaylistURI = currentPlaylistURI,
+           let currentPlayingIndex = findPlaylistIndex(by: currentPlaylistURI) {
+            print("🎯 Smart selection (has playing content): Found currently playing playlist at index \(currentPlayingIndex)")
+            return currentPlayingIndex
+        }
+        
+        // 3. 中等优先级：非首次访问时，用户最后选中的播放列表
+        if !isFirstTimeVisit && lastSelectedPlaylistIndex < spotifyPlaylists.count {
+            print("🎯 Smart selection (returning user): Using last selected index \(lastSelectedPlaylistIndex)")
+            return lastSelectedPlaylistIndex
+        }
+        
+        // 4. 最低优先级：首次访问或无其他上下文时，默认第一个播放列表
+        print("🎯 Smart selection (first visit or fallback): Using first playlist (index 0)")
+        return 0
+    }
+    
+    /// 根据播放列表 URI 查找索引
+    private func findPlaylistIndex(by playlistURI: String) -> Int? {
+        return spotifyPlaylists.firstIndex { playlist in
+            playlist.uri == playlistURI
+        }
+    }
+    
+    /// 应用智能默认选中逻辑，更新当前选中索引并触发滚动
+    func applySmartPlaylistSelection() {
+        let newIndex = preferredPlaylistIndex
+        if newIndex != selectedPlaylistIndex {
+            print("🎯 Applying smart selection: changing from \(selectedPlaylistIndex) to \(newIndex)")
+            selectedPlaylistIndex = newIndex
+            // 延迟触发滚动，确保 UI 更新完成
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.triggerScrollToCurrentPlaylist()
+            }
+        } else {
+            print("🎯 Smart selection: keeping current index \(selectedPlaylistIndex)")
+            // 即使索引相同，也可能需要滚动到正确位置
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.triggerScrollToCurrentPlaylist()
+            }
+        }
+    }
+    
+    /// 触发滚动到当前选中的播放列表
+    func triggerScrollToCurrentPlaylist() {
+        print("📜 Triggering scroll to playlist index: \(selectedPlaylistIndex)")
+        shouldScrollToPlaylist = true
+        // 重置标志，避免重复触发
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.shouldScrollToPlaylist = false
+        }
+    }
     
     private init() {
         print("🔵 AppState singleton created")
@@ -236,6 +312,12 @@ class AppState: ObservableObject {
     func navigateTo(_ page: NavigationPage) {
         currentPage = page
         navigationStack.append(page)
+        
+        // 追踪 playlist 页面访问状态
+        if page == .playlist {
+            lastVisitedPlaylistPage = true
+            print("📍 Marked playlist page as visited")
+        }
     }
     
     func navigateBack() {
@@ -284,7 +366,15 @@ class AppState: ObservableObject {
             validIndex = index
         }
         
-        selectedPlaylistIndex = validIndex
+        // 避免重复更新相同索引
+        if validIndex != selectedPlaylistIndex {
+            selectedPlaylistIndex = validIndex
+            print("🎡 Manual playlist selection: index \(validIndex)")
+        }
+        
+        // 记住用户的选择，用于智能默认选中逻辑
+        lastSelectedPlaylistIndex = validIndex
+        print("📌 Updated lastSelectedPlaylistIndex to \(validIndex)")
         
         // 根据是否有 Spotify 播放列表来决定播放逻辑
         if !spotifyPlaylists.isEmpty && validIndex < spotifyPlaylists.count {

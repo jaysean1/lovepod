@@ -41,6 +41,10 @@ struct PlaylistView: View {
             } else {
                 print("📱 PlaylistView onAppear: no refresh needed")
                 print("📱 Current state - canReadData: \(tokenManager.canReadData), spotifyPlaylists.count: \(appState.spotifyPlaylists.count)")
+                // 应用智能默认选中逻辑
+                if !appState.spotifyPlaylists.isEmpty {
+                    appState.applySmartPlaylistSelection()
+                }
             }
         }
     }
@@ -113,33 +117,34 @@ struct PlaylistView: View {
                     }
                     .padding(.horizontal, geometry.size.width / 2 - 75) // Center the selected item
                 }
+                .onChange(of: appState.shouldScrollToPlaylist) { _, shouldScroll in
+                    // 监听滚动触发标志 - 优先级最高
+                    if shouldScroll {
+                        let targetIndex = appState.selectedPlaylistIndex
+                        let playlistCount = appState.spotifyPlaylists.count
+                        
+                        print("📜 ScrollViewReader: Attempting to scroll to index \(targetIndex) of \(playlistCount) playlists")
+                        
+                        if targetIndex < playlistCount && targetIndex >= 0 {
+                            withAnimation(.easeInOut(duration: 0.4)) {
+                                proxy.scrollTo(targetIndex, anchor: .center)
+                            }
+                            print("✅ ScrollViewReader: Scroll animation triggered for index \(targetIndex)")
+                        } else {
+                            print("❌ ScrollViewReader: Invalid index \(targetIndex) for \(playlistCount) playlists")
+                        }
+                    }
+                }
                 .onChange(of: appState.selectedPlaylistIndex) { _, newIndex in
-                    // 实现无边界循环滚动逻辑
+                    // 简化的索引变化处理 - 只处理转盘导航时的滚动
                     let playlistCount = appState.spotifyPlaylists.count
                     guard playlistCount > 0 else { return }
                     
-                    // 计算有效的索引（保持在边界内）
-                    let validIndex: Int
-                    if newIndex >= playlistCount {
-                        validIndex = playlistCount - 1  // 保持在最后一个
-                    } else if newIndex < 0 {
-                        validIndex = 0  // 保持在第一个
-                    } else {
-                        validIndex = newIndex
-                    }
-                    
-                    // 只有在索引变化时才滚动
-                    if validIndex != appState.selectedPlaylistIndex {
-                        // 更新选中索引
-                        DispatchQueue.main.async {
-                            appState.selectedPlaylistIndex = validIndex
-                        }
-                    }
-                    
-                    // 滚动到选中位置
-                    if validIndex < playlistCount {
+                    // 只在有效范围内且不是智能选中触发时滚动
+                    if newIndex >= 0 && newIndex < playlistCount && !appState.shouldScrollToPlaylist {
+                        print("🎡 Manual navigation: Scrolling to index \(newIndex)")
                         withAnimation(.easeInOut(duration: 0.3)) {
-                            proxy.scrollTo(validIndex, anchor: .center)
+                            proxy.scrollTo(newIndex, anchor: .center)
                         }
                     }
                 }
@@ -149,6 +154,11 @@ struct PlaylistView: View {
             print("🎨 Cover Flow rendering with \(appState.spotifyPlaylists.count) Spotify playlists")
             for (index, playlist) in appState.spotifyPlaylists.enumerated() {
                 print("  \(index): \(playlist.name) - Image: \(playlist.imageURL ?? "nil")")
+            }
+            
+            // 确保在 Cover Flow 显示时应用智能选中逻辑
+            if !appState.spotifyPlaylists.isEmpty {
+                appState.applySmartPlaylistSelection()
             }
         }
     }
