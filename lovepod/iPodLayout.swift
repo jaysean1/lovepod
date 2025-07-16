@@ -336,22 +336,53 @@ struct ClickWheelView: View {
         let angleDelta = normalizedDegrees - lastAngle
         var rotationDelta = angleDelta
         
-        // Handle angle wrap around
+        print("🎡 Angle calculation: current=\(String(format: "%.1f", normalizedDegrees))°, last=\(String(format: "%.1f", lastAngle))°, delta=\(String(format: "%.1f", angleDelta))°")
+        
+        // Handle angle wrap around with improved boundary detection
         if abs(angleDelta) > 180 {
-            rotationDelta = angleDelta > 0 ? angleDelta - 360 : angleDelta + 360
+            // 更健壮的边界处理：确保选择最短的旋转路径
+            if angleDelta > 0 {
+                rotationDelta = angleDelta - 360  // 减少正向角度
+            } else {
+                rotationDelta = angleDelta + 360  // 增加负向角度
+            }
+            
+            // 额外验证：确保调整后的角度合理 (应该在-180到180度之间)
+            if abs(rotationDelta) > 180 {
+                print("⚠️ Warning: Boundary adjustment resulted in unexpected angle: \(String(format: "%.1f", rotationDelta))°")
+                // 如果调整后仍然异常，使用原始较小的变化
+                rotationDelta = abs(angleDelta - 360) < abs(angleDelta + 360) ? (angleDelta - 360) : (angleDelta + 360)
+            }
+            
+            print("🎡 Boundary wrap: adjusted delta from \(String(format: "%.1f", angleDelta))° to \(String(format: "%.1f", rotationDelta))°")
+        }
+        
+        // 添加最小角度阈值，过滤掉微小的抖动
+        let minimumAngleThreshold: Double = 0.5
+        if abs(rotationDelta) < minimumAngleThreshold {
+            print("🎡 Ignoring micro movement: delta=\(String(format: "%.1f", rotationDelta))° (below threshold)")
+            lastAngle = normalizedDegrees
+            return
         }
         
         // Accumulate rotation
+        let previousAccumulator = rotationAccumulator
         rotationAccumulator += rotationDelta
         
+        print("🎡 Rotation state: delta=\(String(format: "%.1f", rotationDelta))°, accumulator: \(String(format: "%.1f", previousAccumulator))° -> \(String(format: "%.1f", rotationAccumulator))°")
+        
         // Check if we've rotated enough to trigger a menu change (30 degrees)
-        let threshold: Double = 30
+        let threshold: Double = 45
         if abs(rotationAccumulator) >= threshold {
             let direction = rotationAccumulator > 0 ? 1 : -1
+            let directionText = direction > 0 ? "顺时针" : "逆时针"
+            print("🎡 Triggering navigation: direction=\(direction) (\(directionText)), accumulator=\(String(format: "%.1f", rotationAccumulator))°")
+            
             handleMenuNavigation(direction: direction)
             
             // Reset accumulator
             rotationAccumulator = 0
+            print("🎡 Accumulator reset to 0")
         }
         
         lastAngle = normalizedDegrees
@@ -443,7 +474,7 @@ struct ClickWheelView: View {
             if movementDistance >= quickMovementThreshold {
                 gestureState = .rotating
                 clearButtonPreview()
-                startRotationGesture()
+                startRotationGesture(initialLocation: currentLocation, wheelSize: wheelSize)
                 handleWheelRotation(value: value, wheelSize: wheelSize)
                 print("🎯 Quick movement detected - immediate rotation mode")
                 return
@@ -453,7 +484,7 @@ struct ClickWheelView: View {
             if movementDistance >= minimumMovementThreshold {
                 gestureState = .rotating
                 clearButtonPreview()
-                startRotationGesture()
+                startRotationGesture(initialLocation: currentLocation, wheelSize: wheelSize)
                 handleWheelRotation(value: value, wheelSize: wheelSize)
                 print("🎯 Movement threshold reached - rotation mode")
                 return
@@ -509,14 +540,25 @@ struct ClickWheelView: View {
         clearButtonPreview()
     }
     
-    private func startRotationGesture() {
+    private func startRotationGesture(initialLocation: CGPoint, wheelSize: CGFloat) {
         if !isWheelBeingRotated {
             isWheelBeingRotated = true
+            
+            // 正确初始化 lastAngle 为当前手势位置的角度
+            let center = CGPoint(x: wheelSize / 2, y: wheelSize / 2)
+            let vector = CGPoint(x: initialLocation.x - center.x, y: initialLocation.y - center.y)
+            let angle = atan2(vector.y, vector.x)
+            let degrees = angle * 180 / .pi
+            lastAngle = degrees < 0 ? degrees + 360 : degrees
+            
+            // 重置旋转累加器
+            rotationAccumulator = 0
+            
             // 如果在Now Playing界面，设置用户正在控制进度
             if appState.currentPage == .nowPlaying {
                 appState.setUserSeekingProgress(true)
             }
-            print("🎵 Started wheel rotation gesture")
+            print("🎵 Started wheel rotation gesture - lastAngle initialized to: \(lastAngle)°")
         }
     }
     
