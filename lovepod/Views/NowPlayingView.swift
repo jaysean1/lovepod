@@ -9,18 +9,22 @@ struct NowPlayingView: View {
     @EnvironmentObject var spotifyService: SpotifyService
     
     var body: some View {
-        VStack(spacing: 0) {
-            // 专辑封面区域
-            albumArtSection
-                .frame(maxHeight: .infinity)
-            
-            // 歌曲信息区域
-            trackInfoSection
-                .frame(height: 120)
-            
-            // 播放进度区域
-            progressSection
-                .frame(height: 60)
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                // 专辑封面区域 - 严格按照设计系统比例分配高度
+                albumArtSection
+                    .frame(height: geometry.size.height * DesignSystem.Layout.albumArtHeight)
+                
+                // 歌曲信息区域 - 按设计系统比例分配高度
+                trackInfoSection
+                    .frame(height: geometry.size.height * DesignSystem.Layout.trackInfoHeight)
+                
+                // 播放进度区域 - 按设计系统比例分配高度
+                progressSection
+                    .frame(height: geometry.size.height * DesignSystem.Layout.scrubberHeight)
+                
+                // 底部剩余空间 - 无剩余空间，去除Spacer
+            }
         }
         .background(DesignSystem.Colors.background)
         .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { _ in
@@ -30,132 +34,153 @@ struct NowPlayingView: View {
     
     // MARK: - Album Art Section
     private var albumArtSection: some View {
-        VStack {
-            Spacer()
+        GeometryReader { geometry in
+            let availableHeight = geometry.size.height
+            let albumSize = min(availableHeight * 0.8, 180) // 动态计算，最大180pt
             
-            // 专辑封面 - 使用 Spotify 数据或模拟数据
-            if let spotifyTrack = appState.currentSpotifyTrack {
-                // 显示 Spotify 专辑封面，仅在专辑图片URL变化时重新加载
-                AlbumArtworkView(
-                    albumImageURL: spotifyTrack.albumImageURL,
-                    trackId: spotifyTrack.id
-                )
-                .frame(
-                    width: DesignSystem.Components.AlbumArt.size,
-                    height: DesignSystem.Components.AlbumArt.size
-                )
-                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Components.AlbumArt.cornerRadius))
-                .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
-                .id(spotifyTrack.albumImageURL ?? "no-image") // 仅在图片URL变化时重新创建
-                    
-            } else {
-                // 默认占位符封面
-                AlbumArtworkView(albumImageURL: nil, trackId: nil)
+            VStack {
+                Spacer()
+                
+                // 专辑封面 - 使用 Spotify 数据或模拟数据
+                if let spotifyTrack = appState.currentSpotifyTrack {
+                    // 显示 Spotify 专辑封面，仅在专辑图片URL变化时重新加载
+                    AlbumArtworkView(
+                        albumImageURL: spotifyTrack.albumImageURL,
+                        trackId: spotifyTrack.id
+                    )
                     .frame(
-                        width: DesignSystem.Components.AlbumArt.size,
-                        height: DesignSystem.Components.AlbumArt.size
+                        width: albumSize,
+                        height: albumSize
                     )
                     .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Components.AlbumArt.cornerRadius))
                     .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
+                    .id(spotifyTrack.albumImageURL ?? "no-image") // 仅在图片URL变化时重新创建
+                        
+                } else {
+                    // 默认占位符封面
+                    AlbumArtworkView(albumImageURL: nil, trackId: nil)
+                        .frame(
+                            width: albumSize,
+                            height: albumSize
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Components.AlbumArt.cornerRadius))
+                        .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
+                }
+                
+                Spacer()
             }
-            
-            Spacer()
         }
+        .frame(maxWidth: .infinity)
     }
     
     // MARK: - Track Info Section
     private var trackInfoSection: some View {
-        VStack(spacing: DesignSystem.Spacing.xs) {
-            // 优先显示 Spotify 歌曲信息，否则使用 AppState 信息
-            if let spotifyTrack = appState.currentSpotifyTrack {
-                // Spotify 歌曲信息
-                Text(spotifyTrack.name)
-                    .font(DesignSystem.Typography.nowPlayingTrack)
-                    .foregroundColor(DesignSystem.Colors.text)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity)
-                
-                Text(spotifyTrack.primaryArtistName)
-                    .font(DesignSystem.Typography.nowPlayingArtist)
-                    .foregroundColor(DesignSystem.Colors.text.opacity(0.8))
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity)
-                
-                Text(spotifyTrack.album.name)
-                    .font(DesignSystem.Typography.nowPlayingArtist)
-                    .foregroundColor(DesignSystem.Colors.text.opacity(0.6))
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity)
-            } else {
-                // 使用 AppState 的歌曲信息（模拟数据或向后兼容）
-                Text(appState.currentTrackTitle)
-                    .font(DesignSystem.Typography.nowPlayingTrack)
-                    .foregroundColor(DesignSystem.Colors.text)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity)
-                
-                Text(appState.currentArtist)
-                    .font(DesignSystem.Typography.nowPlayingArtist)
-                    .foregroundColor(DesignSystem.Colors.text.opacity(0.8))
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity)
-                
-                Text(appState.currentAlbum)
-                    .font(DesignSystem.Typography.nowPlayingArtist)
-                    .foregroundColor(DesignSystem.Colors.text.opacity(0.6))
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity)
-            }
+        VStack {
+            Spacer()
             
-            // 连接状态指示 (仅在开发模式显示)
-            if appState.isSpotifyConnected {
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(Color.green)
-                        .frame(width: 6, height: 6)
-                    Text("Spotify")
-                        .font(.caption2)
-                        .foregroundColor(DesignSystem.Colors.text.opacity(0.4))
+            VStack(spacing: DesignSystem.Spacing.xs) {
+                // 优先显示 Spotify 歌曲信息，否则使用 AppState 信息
+                if let spotifyTrack = appState.currentSpotifyTrack {
+                    // Spotify 歌曲信息 - 紧凑布局
+                    Text(spotifyTrack.name)
+                        .font(DesignSystem.Typography.nowPlayingTrack)
+                        .foregroundColor(DesignSystem.Colors.text)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
+                    
+                    Text(spotifyTrack.primaryArtistName)
+                        .font(DesignSystem.Typography.nowPlayingArtist)
+                        .foregroundColor(DesignSystem.Colors.text.opacity(0.8))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
+                    
+                    Text(spotifyTrack.album.name)
+                        .font(DesignSystem.Typography.nowPlayingArtist)
+                        .foregroundColor(DesignSystem.Colors.text.opacity(0.6))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    // 使用 AppState 的歌曲信息（模拟数据或向后兼容）
+                    Text(appState.currentTrackTitle)
+                        .font(DesignSystem.Typography.nowPlayingTrack)
+                        .foregroundColor(DesignSystem.Colors.text)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
+                    
+                    Text(appState.currentArtist)
+                        .font(DesignSystem.Typography.nowPlayingArtist)
+                        .foregroundColor(DesignSystem.Colors.text.opacity(0.8))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
+                    
+                    Text(appState.currentAlbum)
+                        .font(DesignSystem.Typography.nowPlayingArtist)
+                        .foregroundColor(DesignSystem.Colors.text.opacity(0.6))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
+                }
+                
+                // 连接状态指示 - 仅在开发模式显示，使用最小间距
+                if appState.isSpotifyConnected {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 6, height: 6)
+                        Text("Spotify")
+                            .font(.caption2)
+                            .foregroundColor(DesignSystem.Colors.text.opacity(0.4))
+                    }
+                    .padding(.top, DesignSystem.Spacing.xxs)
                 }
             }
+            
+            Spacer()
         }
-        .padding(.horizontal, DesignSystem.Spacing.m)
+        .padding(.horizontal, DesignSystem.Spacing.s)
+        .frame(maxWidth: .infinity)
     }
     
     // MARK: - Progress Section
     private var progressSection: some View {
-        VStack(spacing: DesignSystem.Spacing.xs) {
-            // 进度条（带有预览功能）
-            ProgressBarView(
-                progress: appState.playbackProgress,
-                duration: appState.duration,
-                isUserSeeking: appState.isUserSeekingProgress
-            )
-            .padding(.horizontal, DesignSystem.Components.Scrubber.padding)
+        VStack {
+            Spacer()
             
-            // 时间显示
-            HStack {
-                Text(formatTime(appState.currentTime))
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundColor(DesignSystem.Colors.text.opacity(0.7))
+            VStack(spacing: DesignSystem.Spacing.s) {
+                // 进度条（带有预览功能）- 减少水平 padding
+                ProgressBarView(
+                    progress: appState.playbackProgress,
+                    duration: appState.duration,
+                    isUserSeeking: appState.isUserSeekingProgress
+                )
+                .padding(.horizontal, DesignSystem.Spacing.s)
                 
-                Spacer()
-                
-                // 如果用户正在拖动，显示预览时间
-                if appState.isUserSeekingProgress {
-                    Text("→ \(formatTime(appState.currentTime))")
+                // 时间显示 - 紧凑布局
+                HStack {
+                    Text(formatTime(appState.currentTime))
                         .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(DesignSystem.Colors.highlightBackground)
-                        .transition(.opacity)
+                        .foregroundColor(DesignSystem.Colors.text.opacity(0.7))
+                    
+                    Spacer()
+                    
+                    // 如果用户正在拖动，显示预览时间
+                    if appState.isUserSeekingProgress {
+                        Text("→ \(formatTime(appState.currentTime))")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(DesignSystem.Colors.highlightBackground)
+                            .transition(.opacity)
+                    }
+                    
+                    Text(formatTime(appState.duration))
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(DesignSystem.Colors.text.opacity(0.7))
                 }
-                
-                Text(formatTime(appState.duration))
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundColor(DesignSystem.Colors.text.opacity(0.7))
+                .padding(.horizontal, DesignSystem.Spacing.s)
+                .animation(.easeInOut(duration: 0.2), value: appState.isUserSeekingProgress)
             }
-            .padding(.horizontal, DesignSystem.Components.Scrubber.padding)
-            .animation(.easeInOut(duration: 0.2), value: appState.isUserSeekingProgress)
+            
+            Spacer()
         }
+        .frame(maxWidth: .infinity)
     }
     
     // MARK: - Helper Methods

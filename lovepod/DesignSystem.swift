@@ -68,9 +68,9 @@ struct DesignSystem {
         static let contentWidth: CGFloat = 0.5     // 50%
         
         // Now playing layout
-        static let albumArtHeight: CGFloat = 0.45  // 45%
+        static let albumArtHeight: CGFloat = 0.50  // 50%
         static let trackInfoHeight: CGFloat = 0.25 // 25%
-        static let scrubberHeight: CGFloat = 0.20  // 20%
+        static let scrubberHeight: CGFloat = 0.25  // 25%
         
         // Click wheel dimensions
         static let wheelDiameterRatio: CGFloat = 0.7    // 70% of screen width

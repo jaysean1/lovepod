@@ -169,10 +169,14 @@ class SpotifyTokenManager: ObservableObject {
             
             if !canReadDataBefore && canReadDataNow {
                 print("🎵 Data access now available, triggering playlist load...")
-                NotificationCenter.default.post(
-                    name: NSNotification.Name("SpotifyDataAccessAvailable"),
-                    object: nil
-                )
+                // 延迟发送通知，确保UI组件已经准备好接收
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("SpotifyDataAccessAvailable"),
+                        object: nil
+                    )
+                    print("📡 SpotifyDataAccessAvailable notification sent")
+                }
             }
         }
     }

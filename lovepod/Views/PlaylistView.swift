@@ -14,20 +14,30 @@ struct PlaylistView: View {
         VStack(spacing: 0) {
             // 使用新的授权状态检查
             if !tokenManager.canReadData {
-                spotifyAuthView
-                    .frame(maxHeight: .infinity)
+                // 授权提示区域 - 主内容区域，垂直居中
+                VStack {
+                    Spacer()
+                    spotifyAuthView
+                    Spacer()
+                }
             } else if appState.spotifyPlaylists.isEmpty && !playlistService.isLoading {
-                // 如果已授权但没有 Spotify 播放列表，显示加载按钮
-                loadPlaylistsView
-                    .frame(maxHeight: .infinity)
+                // 如果已授权但没有 Spotify 播放列表，显示加载按钮，垂直居中
+                VStack {
+                    Spacer()
+                    loadPlaylistsView
+                    Spacer()
+                }
             } else {
-                // Cover Flow 区域
+                // Cover Flow 区域 - 主内容区域，限制合理高度避免过度扩展
                 coverFlowView
-                    .frame(maxHeight: .infinity)
+                    .frame(maxHeight: 400)
                 
-                // 播放列表信息区域
+                // 播放列表信息区域 - 辅助信息区域，固定高度
                 playlistInfoView
                     .frame(height: 80)
+                
+                // 底部对齐空间
+                Spacer()
             }
         }
         .background(DesignSystem.Colors.background)
@@ -45,6 +55,18 @@ struct PlaylistView: View {
                 if !appState.spotifyPlaylists.isEmpty {
                     appState.applySmartPlaylistSelection()
                 }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("SpotifyDataAccessAvailable"))) { _ in
+            print("📢 PlaylistView received SpotifyDataAccessAvailable notification")
+            print("📊 Current state - canReadData: \(tokenManager.canReadData), spotifyPlaylists.count: \(appState.spotifyPlaylists.count), isLoading: \(playlistService.isLoading)")
+            
+            // 确保有数据读取权限且没有正在加载，且播放列表为空时才触发加载
+            if tokenManager.canReadData && !playlistService.isLoading && appState.spotifyPlaylists.isEmpty {
+                print("🚀 Auto-triggering playlist refresh after authorization")
+                playlistService.refreshPlaylists()
+            } else {
+                print("⏭️ Skipping auto-refresh: already have playlists or already loading")
             }
         }
     }
