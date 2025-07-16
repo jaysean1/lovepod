@@ -36,7 +36,7 @@ struct NowPlayingView: View {
     private var albumArtSection: some View {
         GeometryReader { geometry in
             let availableHeight = geometry.size.height
-            let albumSize = min(availableHeight * 0.8, 180) // 动态计算，最大180pt
+            let albumSize = min(availableHeight * 0.85, 220) // 动态计算，最大220pt - 增加图片尺寸
             
             VStack {
                 Spacer()
@@ -69,6 +69,7 @@ struct NowPlayingView: View {
                 
                 Spacer()
             }
+            .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
     }

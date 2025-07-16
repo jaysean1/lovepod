@@ -68,9 +68,9 @@ struct DesignSystem {
         static let contentWidth: CGFloat = 0.5     // 50%
         
         // Now playing layout
-        static let albumArtHeight: CGFloat = 0.50  // 50%
-        static let trackInfoHeight: CGFloat = 0.25 // 25%
-        static let scrubberHeight: CGFloat = 0.25  // 25%
+        static let albumArtHeight: CGFloat = 0.60  // 60% - 增加专辑封面区域
+        static let trackInfoHeight: CGFloat = 0.20 // 20% - 减少歌曲信息区域
+        static let scrubberHeight: CGFloat = 0.20  // 20% - 减少播放进度区域
         
         // Click wheel dimensions
         static let wheelDiameterRatio: CGFloat = 0.7    // 70% of screen width
