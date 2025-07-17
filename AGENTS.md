@@ -1,87 +1,80 @@
-### Project Overview
-This is an iOS music player app designed to replicate the classic iPod experience, integrated with Spotify for music streaming. The app aims to provide a nostalgic and focused music listening experience through a retro user interface and click-wheel interaction.
+# Project Overview
 
-### Architecture
-The project is a native iOS application built with SwiftUI. It connects to the Spotify API for music data and playback control.
+LovePod is an iOS app based on SwiftUI, recreating the classic iPod user experience and visual design, integrated with Spotify services. The project adopts a modular architecture and uses a modern SwiftUI technology stack to achieve a retro interactive experience.
 
-```
-                   +-------------------------+
-                   |      LovePod iOS App    |
-                   |       (SwiftUI)         |
-                   +-----------+-------------+
-                               |
-                               v
-+------------------------------+---------------------------------+
-|                                                                |
-|  +-------------------------+      +-------------------------+  |
-|  |     UI Components       |      |     Business Logic      |  |
-|  |  (Views, Controls)      |      |   (State Management)    |  |
-|  +-------------------------+      +-------------------------+  |
-|                                                                |
-+------------------------------+---------------------------------+
-                               |
-                               v
-                   +-----------+-------------+
-                   |     Spotify Service     |
-                   | (API & SDK Integration) |
-                   +-------------------------+
-```
+## Development Commands
 
-### File Structure Convention
-```
-.
-├── doc/                  # Documentation (PRD, design files)
-├── lovepod/              # Main application source code
-│   ├── Assets.xcassets   # Image assets, icons, colors
-│   ├── ContentView.swift # Main view of the app
-│   └── lovepodApp.swift  # App entry point
-├── lovepod.xcodeproj/    # Xcode project configuration
-├── lovepodTests/         # Unit tests
-└── lovepodUITests/       # UI tests
-```
-
-### Key Technical Details
-- **UI Framework**: SwiftUI
-- **Audio Service**: Spotify iOS SDK for playback and control.
-- **API**: Spotify Web API for fetching playlists and track metadata.
-- **Authentication**: OAuth 2.0 for Spotify user authorization.
-- **State Management**: Likely to use Combine and `ObservableObject` for managing application state.
-- **Design**: The UI/UX is heavily based on the classic iPod, including the iconic click-wheel.
-
-### Development Commands
-As this is a standard Xcode project, all development, building, and testing is done through the Xcode IDE.
-
-- **Run/Build**: Use the "Product" -> "Run" (or `Cmd+R`) and "Product" -> "Build" (or `Cmd+B`) menus in Xcode.
-- **Test**: Use the "Product" -> "Test" (or `Cmd+U`) menu in Xcode to run both unit and UI tests.
-
-### Build & Test Process (Command Line)
-After completing code modifications, use these commands to verify the build:
-
+### Build and Run
 ```bash
-# Build the project for iOS Simulator
-xcodebuild -project lovepod.xcodeproj -scheme lovepod -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15' build -quiet
+# Build and run the project in the iPhone 16 simulator
+xcodebuild -scheme lovepod -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' build
 
-# Run unit tests
-xcodebuild -project lovepod.xcodeproj -scheme lovepod -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 15' test -quiet
+# Open the project with Xcode
+open lovepod.xcodeproj
 
-# Build for physical device (requires connected device)
-xcodebuild -project lovepod.xcodeproj -scheme lovepod -configuration Debug -destination 'platform=iOS,name=Your Device Name' build
+# Clean the build cache
+xcodebuild clean -scheme lovepod
+
+# Build and run on the specified simulator
+xcodebuild -scheme lovepod -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' build test
 ```
 
-### Post-Modification Checklist
-After making code changes:
-1. **Build verification** - Run the build command above
-2. **Test execution** - Run unit and UI tests
-3. **Simulator testing** - Test on iOS Simulator for basic functionality
-4. **Device testing** - Test on physical device for Spotify SDK features
-5. **Feature verification** - Verify the specific features you modified work as expected
+### Testing
+```bash
+# Run unit tests
+xcodebuild test -scheme lovepod -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16'
 
-### Build & Testing
-- **Device**: A physical iOS device with the Spotify app installed is required for testing, as the Spotify iOS SDK does not work on the simulator.
-- **Dependencies**: The SpotifyiOS.framework needs to be included in the project.
-- **Configuration**: The project's `Info.plist` must be configured with a Spotify Client ID, a redirect URI, and the necessary URL schemes.
+# Run UI tests
+xcodebuild test -scheme lovepod -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:lovepodUITests
+```
 
-### Other Important Information
-- **Spotify App Requirement**: The official Spotify app must be installed on the testing device.
-- **API Keys**: A Spotify Developer App needs to be created to get a Client ID for the API.
-- **Permissions**: The app will request user permission to access their Spotify data, including playlists.
+### Development Device Requirements
+- **Recommended Development Device**: iPhone 16 Simulator
+- **Spotify Feature Testing**: Requires a real iOS device (Spotify SDK requirement)
+- **iOS Version Requirement**: iOS 15.0+
+- **Xcode Version**: Xcode 14.0+
+
+## Architecture Overview
+
+### Core Components Structure
+```
+lovepod/
+├── lovepodApp.swift              # App entry point, handles Spotify auth callback and lifecycle
+├── AppState.swift                # Global state management (ObservableObject + Combine)
+├── iPodLayout.swift              # Main layout container (screen area + wheel control area)
+├── ContentView.swift             # App entry point view
+├── DesignSystem.swift            # Design system (colors, fonts, spacing, etc.)
+├── HapticManager.swift           # Haptic feedback manager
+├── Views/                        # Page view components
+├── Spotify Services/             # Spotify integration service layer
+└── Assets.xcassets/             # App assets
+```
+
+### State Management Architecture
+- **AppState**: Singleton pattern for global state management, using `@Published` properties and Combine for a reactive UI.
+- **Navigation**: Enum-based page state management (`NavigationPage`).
+- **Spotify Integration**: Multi-service collaboration mode (iOS SDK + Web API dual authorization).
+
+### Key Design Patterns     
+- **MVVM**: View + ViewModel (AppState) + Model (Spotify Models)
+- **Dependency Injection**: Services are injected via `@EnvironmentObject`.
+- **Observer Pattern**: Uses the Combine framework for state subscription.
+
+## Spotify Integration
+
+### Prerequisites
+- Spotify iOS SDK 3.0.0 is integrated in the `Frameworks/` directory.
+- Client ID needs to be configured in `SpotifyService.swift`.
+- Bundle URL Scheme: `lovepod://`
+
+### Development Notes
+- The Spotify SDK only works on a real device.
+- The official Spotify app must be installed.
+- Web API calls require a valid access token.
+
+## Important Notes
+- Use the iPhone 16 simulator for development.
+- Spotify features must be tested on a real device.
+- Adhere to the Header Comments specification.
+- Prioritize using existing components to avoid reinventing the wheel.
+- Maintain the integrity of the AppState singleton pattern.

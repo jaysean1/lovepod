@@ -1,0 +1,61 @@
+{
+  "style_name": "Glossy Translucent Futurism",
+  "design_philosophy": "A blend of retro hardware aesthetics with modern, clean, and playful 3D rendering. The style emphasizes tactility, depth, and a sense of fun.",
+  "core_elements": {
+    "materials": {
+      "primary": {
+        "type": "translucent_plastic",
+        "finish": "high_gloss",
+        "description": "The main material should feel like colored glass or polished, see-through plastic, allowing light to scatter through it."
+      },
+      "secondary": {
+        "type": "opaque_plastic",
+        "finish": "satin_or_matte",
+        "description": "Used for contrast on interactive elements like buttons or internal components. Provides a less reflective, softer surface."
+      },
+      "accent": {
+        "type": "metal",
+        "finish": "brushed_or_satin",
+        "description": "Used sparingly for functional or mechanical parts to add a touch of realism and premium feel."
+      }
+    },
+    "color_palette": {
+      "scheme": "vibrant_monochromatic_with_neutrals",
+      "dominant": {
+        "hue": "A single, bright, saturated color (e.g., lime green, aqua blue, orange)",
+        "usage": "Applied to the main translucent body."
+      },
+      "highlight": {
+        "hue": "A lighter, near-white tint of the dominant color",
+        "usage": "For internal components or highlighted surfaces."
+      },
+      "neutrals": {
+        "primary": "dark_grey_or_black",
+        "secondary": "off_white_or_cream",
+        "usage": "For functional elements, text, or surfaces that need to be neutral."
+      }
+    },
+    "form_language": {
+      "corners_and_edges": "heavily_rounded_and_soft",
+      "shapes": "simple_chunky_geometric_forms",
+      "details": "minimalist_and_integrated",
+      "description": "Avoid sharp edges. Forms should feel substantial, friendly, and touchable. Details should be inset or bubble out smoothly from the main form."
+    },
+    "lighting_and_shading": {
+      "main_light_source": "soft_and_diffuse",
+      "highlights": "clean_and_sharp_specular_reflections",
+      "shadows": "soft_ambient_occlusion",
+      "special_effects": [
+        "subsurface_scattering",
+        "subtle_caustics"
+      ],
+      "description": "The lighting should make the object look like it's in a clean, studio environment. Highlights define the glossiness, while soft shadows create depth."
+    }
+  },
+  "icon_design_tips": {
+    "perspective": "Use a slight 3/4 or isometric perspective to show depth.",
+    "border": "Define edges with a thin, bright line or a sharp specular highlight rather than a hard black outline.",
+    "simplicity": "Focus on the overall form and material quality rather than tiny, complex details.",
+    "isolation": "Present the icon on a clean, white, or transparent background."
+  }
+}
